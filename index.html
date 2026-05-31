@@ -7,26 +7,38 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=Inter:wght@300;400;500&family=Libre+Franklin:wght@300;400;500&family=Roboto:wght@300;400;500&family=Source+Sans+3:wght@300;400;500&family=Work+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
+  <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
+
+  <meta name="theme-color" content="#f4f1ea">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="dailyMath">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
   <style>
     :root {
       --bg: #f4f1ea;
+      --dark-bg: #11100e;
       --ink: #151515;
+      --dark-ink: #f4f1ea;
       --muted: #8a857c;
+      --dark-muted: #8e887d;
       --panel: rgba(244, 241, 234, 0.82);
+      --dark-panel: rgba(17, 16, 14, 0.84);
       --line: rgba(21, 21, 21, 0.14);
+      --dark-line: rgba(244, 241, 234, 0.16);
+      --font-main: "Libre Franklin", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
     }
 
     body.dark {
-      --bg: #11100e;
-      --ink: #f0ece3;
-      --muted: #8e887d;
-      --panel: rgba(17, 16, 14, 0.82);
-      --line: rgba(240, 236, 227, 0.16);
+      --bg: var(--dark-bg);
+      --ink: var(--dark-ink);
+      --muted: var(--dark-muted);
+      --panel: var(--dark-panel);
+      --line: var(--dark-line);
     }
 
     * {
@@ -44,7 +56,7 @@
       height: 100%;
       background: var(--bg);
       color: var(--ink);
-      font-family: "Libre Franklin", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      font-family: var(--font-main);
       transition: background-color 520ms ease, color 520ms ease;
     }
 
@@ -65,12 +77,10 @@
         max(26px, env(safe-area-inset-left));
     }
 
-    .timer {
+    .control {
       position: fixed;
-      top: max(22px, env(safe-area-inset-top));
-      right: max(24px, env(safe-area-inset-right));
       z-index: 20;
-      padding: 10px 0 10px 18px;
+      padding: 10px 0;
       font-size: 12px;
       font-weight: 400;
       letter-spacing: 0.12em;
@@ -80,16 +90,41 @@
       transition: opacity 320ms ease, color 520ms ease;
     }
 
-    .timer.hidden {
+    .control.hidden { opacity: 0; }
+
+    .timer {
+      top: max(22px, env(safe-area-inset-top));
+      right: max(24px, env(safe-area-inset-right));
+      padding-left: 18px;
+    }
+
+    .style-control {
+      top: max(22px, env(safe-area-inset-top));
+      left: max(24px, env(safe-area-inset-left));
+      padding-right: 18px;
+    }
+
+    .info-control {
+      bottom: max(22px, env(safe-area-inset-bottom));
+      left: max(24px, env(safe-area-inset-left));
+      padding-right: 18px;
+      font-size: 13px;
+      text-transform: lowercase;
+    }
+
+    .info-control.hidden {
       opacity: 0;
+      pointer-events: none;
     }
 
     .practice {
       width: min(100%, 860px);
+      height: 250px;
       text-align: center;
       display: grid;
-      grid-template-rows: 150px 92px;
+      grid-template-rows: 148px 102px;
       align-items: center;
+      transform: translateY(-10px);
     }
 
     .operation {
@@ -116,10 +151,7 @@
       font-variant-numeric: tabular-nums;
       opacity: 0;
       transform: translateY(4px);
-      transition:
-        opacity 280ms ease,
-        transform 280ms ease,
-        color 520ms ease;
+      transition: opacity 280ms ease, transform 280ms ease, color 520ms ease;
     }
 
     .result.visible {
@@ -127,7 +159,8 @@
       transform: translateY(0);
     }
 
-    .overlay {
+    .overlay,
+    .info-overlay {
       position: fixed;
       inset: 0;
       z-index: 50;
@@ -140,16 +173,22 @@
       transition: opacity 260ms ease;
     }
 
-    body.dark .overlay {
-      background: rgba(255, 255, 255, 0.035);
-    }
+    body.dark .overlay,
+    body.dark .info-overlay { background: rgba(255, 255, 255, 0.035); }
 
-    .overlay.open {
+    .overlay.open,
+    .info-overlay.open {
       opacity: 1;
       pointer-events: auto;
     }
 
-    .wheel-wrap {
+    .wheel-wrap { text-align: center; }
+
+    .dual-wheel-wrap {
+      display: grid;
+      grid-template-columns: 138px 138px;
+      gap: 22px;
+      align-items: start;
       text-align: center;
     }
 
@@ -163,21 +202,11 @@
       border-bottom: 1px solid var(--line);
       background: var(--panel);
       backdrop-filter: blur(18px);
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 0%,
-        black 26%,
-        black 74%,
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to bottom,
-        transparent 0%,
-        black 26%,
-        black 74%,
-        transparent 100%
-      );
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 26%, black 74%, transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0%, black 26%, black 74%, transparent 100%);
     }
+
+    .dual-wheel-wrap .wheel { margin: 0 auto; }
 
     .wheel::before,
     .wheel::after {
@@ -196,6 +225,19 @@
       letter-spacing: -0.06em;
       color: var(--ink);
       font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .style-wheel .wheel-option {
+      font-size: 17px;
+      letter-spacing: -0.035em;
+    }
+
+    .color-swatch {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
     }
 
     .picker-caption {
@@ -207,20 +249,83 @@
       color: var(--muted);
     }
 
+    .mini-caption {
+      margin-top: 16px;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .info-card {
+      width: min(84vw, 360px);
+      padding: 28px 28px 26px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+      backdrop-filter: blur(18px);
+      color: var(--ink);
+      cursor: default;
+    }
+
+    .info-title {
+      margin: 0 0 20px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .info-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 13px;
+      font-size: 15px;
+      font-weight: 300;
+      line-height: 1.35;
+      letter-spacing: -0.015em;
+    }
+
+    .info-list strong {
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .share-icon {
+      display: inline-block;
+      transform: translateY(-1px);
+      font-size: 15px;
+      margin: 0 2px;
+    }
+
     @media (max-width: 520px) {
       .practice {
-        grid-template-rows: 136px 88px;
+        height: 236px;
+        grid-template-rows: 136px 100px;
+        transform: translateY(-8px);
       }
 
-      .result {
-        margin-top: 28px;
+      .result { margin-top: 28px; }
+
+      .dual-wheel-wrap {
+        grid-template-columns: 132px 132px;
+        gap: 12px;
       }
+
+      .wheel { width: 118px; }
+      .style-wheel .wheel-option { font-size: 16px; }
     }
   </style>
 </head>
 
 <body>
-  <div id="timer" class="timer">12:00</div>
+  <div id="styleControl" class="control style-control">f/c</div>
+  <div id="timer" class="control timer">12:00</div>
+  <div id="infoControl" class="control info-control">i</div>
 
   <div class="page">
     <main class="practice">
@@ -230,60 +335,114 @@
   </div>
 
   <div id="overlay" class="overlay">
-    <div class="wheel-wrap">
+    <div id="singleWheelWrap" class="wheel-wrap">
       <div id="wheel" class="wheel"></div>
       <div id="pickerCaption" class="picker-caption"></div>
     </div>
+
+    <div id="dualWheelWrap" class="dual-wheel-wrap" hidden>
+      <div>
+        <div id="fontWheel" class="wheel style-wheel"></div>
+        <div class="mini-caption">font</div>
+      </div>
+      <div>
+        <div id="colorWheel" class="wheel"></div>
+        <div class="mini-caption">color</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="infoOverlay" class="info-overlay">
+    <section class="info-card">
+      <p class="info-title">dailyMath</p>
+      <ul class="info-list">
+        <li><strong>Add app:</strong> Safari → <span class="share-icon">□↑</span> → Add to Home Screen.</li>
+        <li><strong>Tap:</strong> show answer. Tap again: next operation.</li>
+        <li><strong>Left edge:</strong> previous operation.</li>
+        <li><strong>Numbers:</strong> tap for dark mode. Long press for level.</li>
+        <li><strong>Timer:</strong> tap hide/show. Long press for minutes.</li>
+        <li><strong>f/c:</strong> tap hide/show. Long press for font and color.</li>
+        <li><strong>Keyboard:</strong> Space, Enter, → next. ← previous.</li>
+        <li><strong>i:</strong> tap help. Long press to hide the icon.</li>
+      </ul>
+    </section>
   </div>
 
   <script>
     const operationEl = document.querySelector("#operation");
     const resultEl = document.querySelector("#result");
     const timerEl = document.querySelector("#timer");
+    const styleControlEl = document.querySelector("#styleControl");
+    const infoControlEl = document.querySelector("#infoControl");
     const overlayEl = document.querySelector("#overlay");
+    const infoOverlayEl = document.querySelector("#infoOverlay");
+    const singleWheelWrapEl = document.querySelector("#singleWheelWrap");
+    const dualWheelWrapEl = document.querySelector("#dualWheelWrap");
     const wheelEl = document.querySelector("#wheel");
+    const fontWheelEl = document.querySelector("#fontWheel");
+    const colorWheelEl = document.querySelector("#colorWheel");
     const pickerCaptionEl = document.querySelector("#pickerCaption");
 
     const DEFAULT_MINUTES = 12;
     const MINUTES_MIN = 1;
     const MINUTES_MAX = 60;
+    const DEFAULT_LEVEL = 2;
     const LEVEL_MIN = 1;
     const LEVEL_MAX = 3;
+    const HISTORY_LIMIT = 50;
     const LONG_PRESS_MS = 560;
     const OPTION_HEIGHT = 54;
 
+    const FONT_OPTIONS = [
+      { label: "Libre", family: "\"Libre Franklin\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" },
+      { label: "Inter", family: "\"Inter\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" },
+      { label: "Work", family: "\"Work Sans\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" },
+      { label: "Plex", family: "\"IBM Plex Sans\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" },
+      { label: "Source", family: "\"Source Sans 3\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" },
+      { label: "Roboto", family: "\"Roboto\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" }
+    ];
+
+    const COLOR_OPTIONS = [
+      { bg: "#f4f1ea", muted: "#8a857c" },
+      { bg: "#edf1ec", muted: "#7f897d" },
+      { bg: "#eef0f4", muted: "#7f8490" },
+      { bg: "#f3eeee", muted: "#8f8181" },
+      { bg: "#f2efe6", muted: "#8c846f" },
+      { bg: "#edf2f1", muted: "#758987" }
+    ];
+
     let selectedMinutes = DEFAULT_MINUTES;
-    let selectedLevel = 1;
+    let selectedLevel = DEFAULT_LEVEL;
+    let selectedFontIndex = 0;
+    let selectedColorIndex = 0;
     let remainingSeconds = selectedMinutes * 60;
     let current = null;
+    let history = [];
     let showingResult = false;
     let timerInterval = null;
     let timerIsHidden = false;
+    let styleControlIsHidden = false;
+    let infoControlIsHidden = false;
     let pickerMode = null;
     let timerLongPress = null;
     let operationLongPress = null;
+    let styleLongPress = null;
+    let infoLongPress = null;
     let timerLongPressTriggered = false;
     let operationLongPressTriggered = false;
+    let styleLongPressTriggered = false;
+    let infoLongPressTriggered = false;
 
-    function randomInt(min, max) {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
+    function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
     function choose(weightedItems) {
       const total = weightedItems.reduce((sum, item) => sum + item.weight, 0);
       let value = Math.random() * total;
-
       for (const item of weightedItems) {
         value -= item.weight;
         if (value <= 0) return item.create();
       }
-
       return weightedItems[weightedItems.length - 1].create();
-    }
-
-    function randomDecimal(min, max, decimals = 1) {
-      const factor = 10 ** decimals;
-      return randomInt(min * factor, max * factor) / factor;
     }
 
     function cleanNumber(value) {
@@ -292,16 +451,27 @@
       return String(rounded).replace(/0+$/, "").replace(/\.$/, "");
     }
 
+    function numberWithFigures(figures, allowDecimal = true) {
+      let raw = "";
+      for (let i = 0; i < figures; i += 1) {
+        const minDigit = i === 0 ? 1 : 0;
+        raw += String(randomInt(minDigit, 9));
+      }
+      if (!allowDecimal) return Number(raw);
+      const decimalPosition = randomInt(0, figures);
+      if (decimalPosition === 0) return Number(raw);
+      if (decimalPosition === figures) return Number(`0.${raw}`);
+      return Number(`${raw.slice(0, decimalPosition)}.${raw.slice(decimalPosition)}`);
+    }
+
     function formatTime(totalSeconds) {
       const minutes = Math.floor(totalSeconds / 60);
       const seconds = totalSeconds % 60;
-
       return `${minutes}:${String(seconds).padStart(2, "0")}`;
     }
 
     function renderTimer() {
       timerEl.textContent = formatTime(remainingSeconds);
-
       if (remainingSeconds === 0) {
         timerIsHidden = false;
         timerEl.classList.remove("hidden");
@@ -312,7 +482,6 @@
       clearInterval(timerInterval);
       remainingSeconds = seconds;
       renderTimer();
-
       timerInterval = setInterval(() => {
         if (remainingSeconds > 0) {
           remainingSeconds -= 1;
@@ -323,159 +492,193 @@
 
     function toggleTimerVisibility() {
       if (remainingSeconds === 0) return;
-
       timerIsHidden = !timerIsHidden;
       timerEl.classList.toggle("hidden", timerIsHidden);
     }
 
-    function buildWheel(min, max, formatter) {
-      wheelEl.innerHTML = "";
+    function toggleStyleControlVisibility() {
+      styleControlIsHidden = !styleControlIsHidden;
+      styleControlEl.classList.toggle("hidden", styleControlIsHidden);
+    }
 
+    function toggleInfoControlVisibility() {
+      infoControlIsHidden = !infoControlIsHidden;
+      infoControlEl.classList.toggle("hidden", infoControlIsHidden);
+    }
+
+    function buildWheel(targetEl, min, max, formatter) {
+      targetEl.innerHTML = "";
       for (let value = min; value <= max; value += 1) {
         const option = document.createElement("div");
         option.className = "wheel-option";
-        option.textContent = formatter(value);
         option.dataset.value = String(value);
-        wheelEl.appendChild(option);
+        const rendered = formatter(value);
+        if (rendered instanceof HTMLElement) option.appendChild(rendered);
+        else option.textContent = rendered;
+        targetEl.appendChild(option);
       }
     }
 
-    function scrollWheelTo(value, min) {
-      wheelEl.scrollTop = (value - min) * OPTION_HEIGHT;
-    }
+    function scrollWheelTo(targetEl, value, min) { targetEl.scrollTop = (value - min) * OPTION_HEIGHT; }
 
-    function getWheelValue(min, max) {
-      const index = Math.round(wheelEl.scrollTop / OPTION_HEIGHT);
+    function getWheelValue(targetEl, min, max) {
+      const index = Math.round(targetEl.scrollTop / OPTION_HEIGHT);
       return Math.min(max, Math.max(min, index + min));
     }
 
     function openMinutePicker() {
       pickerMode = "minutes";
+      singleWheelWrapEl.hidden = false;
+      dualWheelWrapEl.hidden = true;
       pickerCaptionEl.textContent = "minutes";
-      buildWheel(MINUTES_MIN, MINUTES_MAX, value => String(value));
+      buildWheel(wheelEl, MINUTES_MIN, MINUTES_MAX, value => String(value));
       overlayEl.classList.add("open");
       timerIsHidden = false;
       timerEl.classList.remove("hidden");
-      requestAnimationFrame(() => scrollWheelTo(selectedMinutes, MINUTES_MIN));
+      requestAnimationFrame(() => scrollWheelTo(wheelEl, selectedMinutes, MINUTES_MIN));
     }
 
     function openLevelPicker() {
       pickerMode = "level";
+      singleWheelWrapEl.hidden = false;
+      dualWheelWrapEl.hidden = true;
       pickerCaptionEl.textContent = "level";
-      buildWheel(LEVEL_MIN, LEVEL_MAX, value => String(value));
+      buildWheel(wheelEl, LEVEL_MIN, LEVEL_MAX, value => String(value));
       overlayEl.classList.add("open");
-      requestAnimationFrame(() => scrollWheelTo(selectedLevel, LEVEL_MIN));
+      requestAnimationFrame(() => scrollWheelTo(wheelEl, selectedLevel, LEVEL_MIN));
+    }
+
+    function openStylePicker() {
+      pickerMode = "style";
+      singleWheelWrapEl.hidden = true;
+      dualWheelWrapEl.hidden = false;
+      buildWheel(fontWheelEl, 0, FONT_OPTIONS.length - 1, index => FONT_OPTIONS[index].label);
+      buildWheel(colorWheelEl, 0, COLOR_OPTIONS.length - 1, index => {
+        const swatch = document.createElement("span");
+        swatch.className = "color-swatch";
+        swatch.style.background = COLOR_OPTIONS[index].bg;
+        return swatch;
+      });
+      overlayEl.classList.add("open");
+      styleControlIsHidden = false;
+      styleControlEl.classList.remove("hidden");
+      requestAnimationFrame(() => {
+        scrollWheelTo(fontWheelEl, selectedFontIndex, 0);
+        scrollWheelTo(colorWheelEl, selectedColorIndex, 0);
+      });
+    }
+
+    function applyStylePreferences() {
+      const font = FONT_OPTIONS[selectedFontIndex];
+      const color = COLOR_OPTIONS[selectedColorIndex];
+      document.documentElement.style.setProperty("--font-main", font.family);
+      document.documentElement.style.setProperty("--bg", color.bg);
+      document.documentElement.style.setProperty("--dark-ink", color.bg);
+      document.documentElement.style.setProperty("--muted", color.muted);
+      const themeMeta = document.querySelector("meta[name='theme-color']");
+      if (themeMeta) themeMeta.setAttribute("content", color.bg);
     }
 
     function closePicker() {
       if (!overlayEl.classList.contains("open")) return;
-
       if (pickerMode === "minutes") {
-        selectedMinutes = getWheelValue(MINUTES_MIN, MINUTES_MAX);
+        selectedMinutes = getWheelValue(wheelEl, MINUTES_MIN, MINUTES_MAX);
         startTimer(selectedMinutes * 60);
       }
-
       if (pickerMode === "level") {
-        selectedLevel = getWheelValue(LEVEL_MIN, LEVEL_MAX);
+        selectedLevel = getWheelValue(wheelEl, LEVEL_MIN, LEVEL_MAX);
         showNewOperation();
       }
-
+      if (pickerMode === "style") {
+        selectedFontIndex = getWheelValue(fontWheelEl, 0, FONT_OPTIONS.length - 1);
+        selectedColorIndex = getWheelValue(colorWheelEl, 0, COLOR_OPTIONS.length - 1);
+        applyStylePreferences();
+      }
       pickerMode = null;
       overlayEl.classList.remove("open");
     }
 
-    function numberWithDigits(digits, allowDecimal = true) {
-      let raw = "";
-    
-      for (let i = 0; i < digits; i += 1) {
-        const minDigit = i === 0 ? 1 : 0;
-        raw += String(randomInt(minDigit, 9));
-      }
-    
-      if (!allowDecimal) {
-        return Number(raw);
-      }
-    
-      const decimalMode = randomInt(0, digits);
-    
-      if (decimalMode === 0) {
-        return Number(raw);
-      }
-    
-      if (decimalMode === digits) {
-        return Number(`0.${raw}`);
-      }
-    
-      const integerPart = raw.slice(0, decimalMode);
-      const decimalPart = raw.slice(decimalMode);
-    
-      return Number(`${integerPart}.${decimalPart}`);
+    function multiplicationWithFigures(figuresA, figuresB) {
+      const a = numberWithFigures(figuresA, true);
+      const b = numberWithFigures(figuresB, true);
+      const result = Math.round(a * b * 10000) / 10000;
+      return { text: `${cleanNumber(a)} × ${cleanNumber(b)}`, result: cleanNumber(result) };
     }
 
-    function multiplicationByLevel(level) {
-      const digits = level + 1;
-      const a = numberWithDigits(digits, true);
-      const b = numberWithDigits(digits, true);
-      const result = Math.round(a * b * 1000) / 1000;
-
-      return {
-        text: `${cleanNumber(a)} × ${cleanNumber(b)}`,
-        result: cleanNumber(result)
-      };
+    function subtractionWithFigures(figuresA, figuresB) {
+      const a = numberWithFigures(figuresA, true);
+      const b = numberWithFigures(figuresB, true);
+      const result = Math.round((a - b) * 10000) / 10000;
+      return { text: `${cleanNumber(a)} − ${cleanNumber(b)}`, result: cleanNumber(result) };
     }
 
-    function subtractionByLevel(level) {
-      const digits = level + 1;
-      const a = numberWithDigits(digits, true);
-      const b = numberWithDigits(digits, true);
-      const high = Math.max(a, b);
-      const low = Math.min(a, b);
-      const result = Math.round((high - low) * 1000) / 1000;
-
-      return {
-        text: `${cleanNumber(high)} − ${cleanNumber(low)}`,
-        result: cleanNumber(result)
-      };
-    }
-
-    function squareRootByLevel(level) {
-      const radicandDigits = level + 3;
-      const minRadicand = 10 ** (radicandDigits - 1);
-      const maxRadicand = 10 ** radicandDigits - 1;
-
+    function squareRootWithRadicandDigits(digits) {
+      const minRadicand = 10 ** (digits - 1);
+      const maxRadicand = 10 ** digits - 1;
       const minRoot = Math.ceil(Math.sqrt(minRadicand));
       const maxRoot = Math.floor(Math.sqrt(maxRadicand));
       const root = randomInt(minRoot, maxRoot);
       const radicand = root * root;
-
-      return {
-        text: `√${radicand}`,
-        result: root
-      };
+      return { text: `√${radicand}`, result: root };
     }
 
-    function createOperation() {
+    function createLevelOneOperation() {
+      const oneDigitFirst = Math.random() < 0.5;
       return choose([
-        { weight: 72, create: () => multiplicationByLevel(selectedLevel) },
-        { weight: 18, create: () => subtractionByLevel(selectedLevel) },
-        { weight: 10, create: () => squareRootByLevel(selectedLevel) }
+        { weight: 80, create: () => oneDigitFirst ? multiplicationWithFigures(1, 2) : multiplicationWithFigures(2, 1) },
+        { weight: 20, create: () => oneDigitFirst ? subtractionWithFigures(1, 2) : subtractionWithFigures(2, 1) }
       ]);
     }
 
+    function createLevelTwoOperation() {
+      return choose([
+        { weight: 72, create: () => multiplicationWithFigures(2, 2) },
+        { weight: 18, create: () => subtractionWithFigures(2, 2) },
+        { weight: 10, create: () => squareRootWithRadicandDigits(Math.random() < 0.5 ? 3 : 4) }
+      ]);
+    }
+
+    function createLevelThreeOperation() {
+      return choose([
+        { weight: 72, create: () => multiplicationWithFigures(3, 3) },
+        { weight: 18, create: () => subtractionWithFigures(3, 3) },
+        { weight: 10, create: () => squareRootWithRadicandDigits(5) }
+      ]);
+    }
+
+    function createOperation() {
+      if (selectedLevel === 1) return createLevelOneOperation();
+      if (selectedLevel === 2) return createLevelTwoOperation();
+      return createLevelThreeOperation();
+    }
+
+    function saveCurrentToHistory() {
+      if (!current) return;
+      history.push(current);
+      if (history.length > HISTORY_LIMIT) history = history.slice(history.length - HISTORY_LIMIT);
+    }
+
     function showNewOperation() {
+      saveCurrentToHistory();
       current = createOperation();
       showingResult = false;
-
       operationEl.textContent = current.text;
       resultEl.textContent = "";
       resultEl.classList.remove("visible");
     }
 
+    function showPreviousOperation() {
+      if (history.length === 0) return;
+      current = history.pop();
+      operationEl.textContent = current.text;
+      resultEl.textContent = current.result;
+      resultEl.classList.add("visible");
+      showingResult = true;
+    }
+
     function showResult() {
       resultEl.textContent = current.result;
-      requestAnimationFrame(() => {
-        resultEl.classList.add("visible");
-      });
+      requestAnimationFrame(() => resultEl.classList.add("visible"));
       showingResult = true;
     }
 
@@ -484,81 +687,100 @@
         showResult();
         return;
       }
-
       showNewOperation();
     }
 
-    function toggleDarkMode() {
-      document.body.classList.toggle("dark");
+    function toggleDarkMode() { document.body.classList.toggle("dark"); }
+
+    function isControlTarget(target) {
+      return target === timerEl || target === operationEl || target === styleControlEl || target === infoControlEl;
     }
 
-    document.body.addEventListener("click", (event) => {
+    document.body.addEventListener("click", event => {
       if (overlayEl.classList.contains("open")) return;
-      if (event.target === timerEl || event.target === operationEl) return;
-
+      if (infoOverlayEl.classList.contains("open")) return;
+      if (isControlTarget(event.target)) return;
+      if (event.clientX <= window.innerWidth * 0.25) {
+        showPreviousOperation();
+        return;
+      }
       advancePractice();
     });
 
-    timerEl.addEventListener("click", (event) => {
-      event.stopPropagation();
-
-      if (!timerLongPressTriggered) {
-        toggleTimerVisibility();
+    document.addEventListener("keydown", event => {
+      if (overlayEl.classList.contains("open")) return;
+      if (infoOverlayEl.classList.contains("open")) return;
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        showPreviousOperation();
+        return;
       }
+      if (event.key === " " || event.key === "Enter" || event.key === "ArrowRight") {
+        event.preventDefault();
+        advancePractice();
+      }
+    });
 
+    timerEl.addEventListener("click", event => {
+      event.stopPropagation();
+      if (!timerLongPressTriggered) toggleTimerVisibility();
       timerLongPressTriggered = false;
     });
 
     timerEl.addEventListener("pointerdown", () => {
       timerLongPressTriggered = false;
-
-      timerLongPress = setTimeout(() => {
-        timerLongPressTriggered = true;
-        openMinutePicker();
-      }, LONG_PRESS_MS);
+      timerLongPress = setTimeout(() => { timerLongPressTriggered = true; openMinutePicker(); }, LONG_PRESS_MS);
     });
+    timerEl.addEventListener("pointerup", () => clearTimeout(timerLongPress));
+    timerEl.addEventListener("pointerleave", () => clearTimeout(timerLongPress));
 
-    timerEl.addEventListener("pointerup", () => {
-      clearTimeout(timerLongPress);
-    });
-
-    timerEl.addEventListener("pointerleave", () => {
-      clearTimeout(timerLongPress);
-    });
-
-    operationEl.addEventListener("click", (event) => {
+    styleControlEl.addEventListener("click", event => {
       event.stopPropagation();
+      if (!styleLongPressTriggered) toggleStyleControlVisibility();
+      styleLongPressTriggered = false;
+    });
 
-      if (!operationLongPressTriggered) {
-        toggleDarkMode();
-      }
+    styleControlEl.addEventListener("pointerdown", () => {
+      styleLongPressTriggered = false;
+      styleLongPress = setTimeout(() => { styleLongPressTriggered = true; openStylePicker(); }, LONG_PRESS_MS);
+    });
+    styleControlEl.addEventListener("pointerup", () => clearTimeout(styleLongPress));
+    styleControlEl.addEventListener("pointerleave", () => clearTimeout(styleLongPress));
 
+    infoControlEl.addEventListener("click", event => {
+      event.stopPropagation();
+      if (!infoLongPressTriggered) infoOverlayEl.classList.add("open");
+      infoLongPressTriggered = false;
+    });
+
+    infoControlEl.addEventListener("pointerdown", () => {
+      infoLongPressTriggered = false;
+      infoLongPress = setTimeout(() => { infoLongPressTriggered = true; toggleInfoControlVisibility(); }, LONG_PRESS_MS);
+    });
+    infoControlEl.addEventListener("pointerup", () => clearTimeout(infoLongPress));
+    infoControlEl.addEventListener("pointerleave", () => clearTimeout(infoLongPress));
+
+    operationEl.addEventListener("click", event => {
+      event.stopPropagation();
+      if (!operationLongPressTriggered) toggleDarkMode();
       operationLongPressTriggered = false;
     });
 
     operationEl.addEventListener("pointerdown", () => {
       operationLongPressTriggered = false;
-
-      operationLongPress = setTimeout(() => {
-        operationLongPressTriggered = true;
-        openLevelPicker();
-      }, LONG_PRESS_MS);
+      operationLongPress = setTimeout(() => { operationLongPressTriggered = true; openLevelPicker(); }, LONG_PRESS_MS);
     });
+    operationEl.addEventListener("pointerup", () => clearTimeout(operationLongPress));
+    operationEl.addEventListener("pointerleave", () => clearTimeout(operationLongPress));
 
-    operationEl.addEventListener("pointerup", () => {
-      clearTimeout(operationLongPress);
-    });
+    overlayEl.addEventListener("click", event => { if (event.target === overlayEl) closePicker(); });
+    infoOverlayEl.addEventListener("click", event => { if (event.target === infoOverlayEl) infoOverlayEl.classList.remove("open"); });
 
-    operationEl.addEventListener("pointerleave", () => {
-      clearTimeout(operationLongPress);
-    });
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js"));
+    }
 
-    overlayEl.addEventListener("click", (event) => {
-      if (event.target === overlayEl) {
-        closePicker();
-      }
-    });
-
+    applyStylePreferences();
     showNewOperation();
     startTimer();
   </script>
