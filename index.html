@@ -244,7 +244,7 @@
     const MINUTES_MIN = 1;
     const MINUTES_MAX = 60;
     const LEVEL_MIN = 1;
-    const LEVEL_MAX = 7;
+    const LEVEL_MAX = 3;
     const LONG_PRESS_MS = 560;
     const OPTION_HEIGHT = 54;
 
@@ -261,18 +261,20 @@
     let timerLongPressTriggered = false;
     let operationLongPressTriggered = false;
 
-    const levelLabels = {
-      1: "nivel 1",
-      2: "nivel 2",
-      3: "nivel 3",
-      4: "nivel 4",
-      5: "nivel 5",
-      6: "nivel 6",
-      7: "nivel 7"
-    };
-
     function randomInt(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function choose(weightedItems) {
+      const total = weightedItems.reduce((sum, item) => sum + item.weight, 0);
+      let value = Math.random() * total;
+
+      for (const item of weightedItems) {
+        value -= item.weight;
+        if (value <= 0) return item.create();
+      }
+
+      return weightedItems[weightedItems.length - 1].create();
     }
 
     function randomDecimal(min, max, decimals = 1) {
@@ -281,7 +283,9 @@
     }
 
     function cleanNumber(value) {
-      return Number.isInteger(value) ? String(value) : value.toFixed(1);
+      const rounded = Math.round(value * 1000) / 1000;
+      if (Number.isInteger(rounded)) return String(rounded);
+      return String(rounded).replace(/0+$/, "").replace(/\.$/, "");
     }
 
     function formatTime(totalSeconds) {
@@ -353,7 +357,7 @@
 
     function openLevelPicker() {
       pickerMode = "level";
-      pickerCaptionEl.textContent = "complejidad";
+      pickerCaptionEl.textContent = "nivel";
       buildWheel(LEVEL_MIN, LEVEL_MAX, value => String(value));
       overlayEl.classList.add("open");
       requestAnimationFrame(() => scrollWheelTo(selectedLevel, LEVEL_MIN));
@@ -382,89 +386,78 @@
       return { text: `${a} × ${b}`, result: a * b };
     }
 
-    function multiplicationTwoByTwo(min = 10, max = 99) {
-      const a = randomInt(min, max);
-      const b = randomInt(min, max);
+    function multiplicationTwoByTwo() {
+      const a = randomInt(10, 99);
+      const b = randomInt(10, 99);
       return { text: `${a} × ${b}`, result: a * b };
     }
 
-    function subtraction(minA, maxA, minB = 2) {
+    function multiplicationUpToThreeDigits() {
+      const a = randomInt(10, 999);
+      const b = randomInt(2, 999);
+      return { text: `${a} × ${b}`, result: a * b };
+    }
+
+    function multiplicationUpToFourDigits() {
+      const a = Math.random() < 0.35 ? randomDecimal(10, 9999, 1) : randomInt(10, 9999);
+      const b = Math.random() < 0.35 ? randomDecimal(2, 9999, 1) : randomInt(2, 9999);
+      const result = Math.round(a * b * 1000) / 1000;
+      return { text: `${cleanNumber(a)} × ${cleanNumber(b)}`, result: cleanNumber(result) };
+    }
+
+    function subtraction(minA, maxA) {
       const a = randomInt(minA, maxA);
-      const b = randomInt(minB, a - 1);
+      const b = randomInt(2, a - 1);
       return { text: `${a} − ${b}`, result: a - b };
     }
 
-    function squareRoot() {
-      const root = randomInt(4, 30);
+    function subtractionUpToFourDigits() {
+      const a = Math.random() < 0.35 ? randomDecimal(100, 9999, 1) : randomInt(100, 9999);
+      const b = Math.random() < 0.35 ? randomDecimal(2, Math.floor(a) - 1, 1) : randomInt(2, Math.floor(a) - 1);
+      const result = Math.round((a - b) * 1000) / 1000;
+      return { text: `${cleanNumber(a)} − ${cleanNumber(b)}`, result: cleanNumber(result) };
+    }
+
+    function squareRootIntegerResult() {
+      const root = randomInt(2, 999);
       const value = root * root;
       return { text: `√${value}`, result: root };
     }
 
-    function decimalOperation() {
-      const a = randomDecimal(12, 99, 1);
-      const b = randomDecimal(2, Math.floor(a) - 1, 1);
-      const result = Math.round((a - b) * 10) / 10;
-      return { text: `${cleanNumber(a)} − ${cleanNumber(b)}`, result: cleanNumber(result) };
+    function squareRootDecimalResult() {
+      const root = randomDecimal(2, 999, 1);
+      const value = Math.round(root * root * 1000) / 1000;
+      return { text: `√${cleanNumber(value)}`, result: cleanNumber(root) };
     }
 
-    function divisionExact() {
-      const result = randomInt(6, 40);
-      const divisor = randomInt(2, 12);
-      const dividend = result * divisor;
-      return { text: `${dividend} ÷ ${divisor}`, result };
+    function createLevelOneOperation() {
+      return choose([
+        { weight: 64, create: () => multiplicationTwoByTwo() },
+        { weight: 16, create: () => multiplicationOneByTwo() },
+        { weight: 20, create: () => subtraction(20, 99) }
+      ]);
     }
 
-    function mixedThreeTerm() {
-      const a = randomInt(10, 99);
-      const b = randomInt(2, 9);
-      const c = randomInt(10, 99);
-      return { text: `${a} + ${b} × ${c}`, result: a + b * c };
+    function createLevelTwoOperation() {
+      return choose([
+        { weight: 60, create: () => multiplicationUpToThreeDigits() },
+        { weight: 25, create: () => subtraction(100, 999) },
+        { weight: 15, create: () => squareRootIntegerResult() }
+      ]);
     }
 
-    function createMultiplicationForLevel(level) {
-      if (level === 1) {
-        return Math.random() < 0.35 ? multiplicationOneByTwo() : multiplicationTwoByTwo();
-      }
-
-      if (level === 2) {
-        return Math.random() < 0.5 ? multiplicationTwoByTwo(10, 99) : multiplicationOneByTwo();
-      }
-
-      if (level === 3) {
-        return multiplicationTwoByTwo(20, 99);
-      }
-
-      if (level === 4) {
-        return Math.random() < 0.5 ? multiplicationTwoByTwo(30, 99) : divisionExact();
-      }
-
-      if (level === 5) {
-        return Math.random() < 0.45 ? multiplicationTwoByTwo(50, 140) : squareRoot();
-      }
-
-      if (level === 6) {
-        return Math.random() < 0.5 ? mixedThreeTerm() : multiplicationTwoByTwo(80, 180);
-      }
-
-      return Math.random() < 0.4 ? mixedThreeTerm() : multiplicationTwoByTwo(120, 260);
-    }
-
-    function createSubtractionForLevel(level) {
-      if (level === 1) return subtraction(20, 99);
-      if (level === 2) return subtraction(50, 180);
-      if (level === 3) return subtraction(100, 400);
-      if (level === 4) return decimalOperation();
-      if (level === 5) return subtraction(300, 999);
-      if (level === 6) return decimalOperation();
-      return subtraction(1000, 5000);
+    function createLevelThreeOperation() {
+      return choose([
+        { weight: 48, create: () => multiplicationUpToFourDigits() },
+        { weight: 27, create: () => subtractionUpToFourDigits() },
+        { weight: 25, create: () => squareRootDecimalResult() }
+      ]);
     }
 
     function createOperation() {
-      const isMultiplicationFamily = Math.random() < 0.8;
-
-      return isMultiplicationFamily
-        ? createMultiplicationForLevel(selectedLevel)
-        : createSubtractionForLevel(selectedLevel);
+      if (selectedLevel === 1) return createLevelOneOperation();
+      if (selectedLevel === 2) return createLevelTwoOperation();
+      return createLevelThreeOperation();
     }
 
     function showNewOperation() {
