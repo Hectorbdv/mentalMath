@@ -32,6 +32,9 @@
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     html,
@@ -47,8 +50,8 @@
 
     body {
       overflow: hidden;
-      user-select: none;
       cursor: pointer;
+      touch-action: manipulation;
     }
 
     .page {
@@ -98,6 +101,7 @@
       line-height: 0.88;
       font-variant-numeric: tabular-nums;
       cursor: pointer;
+      touch-action: manipulation;
       transition: color 520ms ease, opacity 260ms ease;
     }
 
@@ -380,7 +384,7 @@
       overlayEl.classList.remove("open");
     }
 
-    function numberWithDigits(digits, allowDecimal) {
+    function numberWithDigits(digits, allowDecimal = true) {
       const min = 10 ** (digits - 1);
       const max = 10 ** digits - 1;
 
@@ -393,9 +397,8 @@
 
     function multiplicationByLevel(level) {
       const digits = level + 1;
-      const allowDecimal = true;
-      const a = numberWithDigits(digits, allowDecimal);
-      const b = numberWithDigits(digits, allowDecimal);
+      const a = numberWithDigits(digits, true);
+      const b = numberWithDigits(digits, true);
       const result = Math.round(a * b * 1000) / 1000;
 
       return {
@@ -406,9 +409,8 @@
 
     function subtractionByLevel(level) {
       const digits = level + 1;
-      const allowDecimal = true;
-      const a = numberWithDigits(digits, allowDecimal);
-      const b = numberWithDigits(digits, allowDecimal);
+      const a = numberWithDigits(digits, true);
+      const b = numberWithDigits(digits, true);
       const high = Math.max(a, b);
       const low = Math.min(a, b);
       const result = Math.round((high - low) * 1000) / 1000;
@@ -420,26 +422,26 @@
     }
 
     function squareRootByLevel(level) {
-      const valueDigits = level + 2;
-      const minValue = 10 ** (valueDigits - 1);
-      const maxValue = 10 ** valueDigits - 1;
+      const radicandDigits = level + 3;
+      const minRadicand = 10 ** (radicandDigits - 1);
+      const maxRadicand = 10 ** radicandDigits - 1;
 
-      const minRoot = Math.ceil(Math.sqrt(minValue));
-      const maxRoot = Math.floor(Math.sqrt(maxValue));
+      const minRoot = Math.ceil(Math.sqrt(minRadicand));
+      const maxRoot = Math.floor(Math.sqrt(maxRadicand));
       const root = randomInt(minRoot, maxRoot);
-      const value = root * root;
+      const radicand = root * root;
 
       return {
-        text: `√${value}`,
+        text: `√${radicand}`,
         result: root
       };
     }
 
     function createOperation() {
       return choose([
-        { weight: 60, create: () => multiplicationByLevel(selectedLevel) },
-        { weight: 25, create: () => subtractionByLevel(selectedLevel) },
-        { weight: 15, create: () => squareRootByLevel(selectedLevel) }
+        { weight: 72, create: () => multiplicationByLevel(selectedLevel) },
+        { weight: 18, create: () => subtractionByLevel(selectedLevel) },
+        { weight: 10, create: () => squareRootByLevel(selectedLevel) }
       ]);
     }
 
