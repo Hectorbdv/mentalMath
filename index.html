@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Operaciones</title>
+  <title>app.dailyMath</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@300;400;500&display=swap" rel="stylesheet">
 
+  <link rel="icon" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
 
   <style>
@@ -41,9 +42,7 @@
       background: var(--bg);
       color: var(--ink);
       font-family: "Libre Franklin", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-      transition:
-        background-color 520ms ease,
-        color 520ms ease;
+      transition: background-color 520ms ease, color 520ms ease;
     }
 
     body {
@@ -55,7 +54,7 @@
     .page {
       min-height: 100dvh;
       display: grid;
-      grid-template-rows: 1fr auto 1fr;
+      place-items: center;
       padding:
         max(28px, env(safe-area-inset-top))
         max(26px, env(safe-area-inset-right))
@@ -84,10 +83,8 @@
     }
 
     .practice {
-      grid-row: 2;
       width: min(100%, 860px);
-      margin: 0 auto;
-      text-align: left;
+      text-align: center;
       display: grid;
       grid-template-rows: 26px 150px 92px;
       align-items: center;
@@ -239,7 +236,7 @@
 
   <div class="page">
     <main class="practice" id="practice">
-      <div class="label">Cálculo mental</div>
+      <div class="label">FOCUS</div>
       <div id="operation" class="operation"></div>
       <div id="result" class="result"></div>
     </main>
@@ -272,7 +269,6 @@
     let remainingSeconds = selectedMinutes * 60;
     let current = null;
     let showingResult = false;
-    let timerHidden = false;
     let timerInterval = null;
     let longPressTimer = null;
     let longPressTriggered = false;
@@ -292,7 +288,6 @@
       timerEl.textContent = formatTime(remainingSeconds);
 
       if (remainingSeconds === 0) {
-        timerHidden = false;
         timerEl.classList.remove("hidden");
       }
     }
@@ -312,8 +307,6 @@
 
     function hideTimer() {
       if (remainingSeconds === 0) return;
-
-      timerHidden = true;
       timerEl.classList.add("hidden");
     }
 
@@ -339,8 +332,7 @@
     }
 
     function openMinutePicker() {
-      if (remainingSeconds !== 0) return;
-
+      timerEl.classList.remove("hidden");
       overlayEl.classList.add("open");
       requestAnimationFrame(() => scrollWheelTo(selectedMinutes));
     }
@@ -350,7 +342,6 @@
 
       selectedMinutes = getWheelMinutes();
       overlayEl.classList.remove("open");
-      timerHidden = false;
       timerEl.classList.remove("hidden");
       startTimer(selectedMinutes * 60);
     }
