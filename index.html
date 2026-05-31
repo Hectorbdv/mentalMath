@@ -17,7 +17,7 @@
       --bg: #f4f1ea;
       --ink: #151515;
       --muted: #8a857c;
-      --panel: rgba(244, 241, 234, 0.78);
+      --panel: rgba(244, 241, 234, 0.82);
       --line: rgba(21, 21, 21, 0.14);
     }
 
@@ -25,7 +25,7 @@
       --bg: #11100e;
       --ink: #f0ece3;
       --muted: #8e887d;
-      --panel: rgba(17, 16, 14, 0.78);
+      --panel: rgba(17, 16, 14, 0.82);
       --line: rgba(240, 236, 227, 0.16);
     }
 
@@ -67,7 +67,7 @@
       top: max(22px, env(safe-area-inset-top));
       right: max(24px, env(safe-area-inset-right));
       z-index: 20;
-      padding: 8px 0 8px 14px;
+      padding: 10px 0 10px 18px;
       font-size: 12px;
       font-weight: 400;
       letter-spacing: 0.12em;
@@ -79,25 +79,14 @@
 
     .timer.hidden {
       opacity: 0;
-      pointer-events: none;
     }
 
     .practice {
       width: min(100%, 860px);
       text-align: center;
       display: grid;
-      grid-template-rows: 26px 150px 92px;
+      grid-template-rows: 150px 92px;
       align-items: center;
-    }
-
-    .label {
-      align-self: start;
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: 0.28em;
-      text-transform: uppercase;
-      color: var(--muted);
-      transition: color 520ms ease;
     }
 
     .operation {
@@ -121,25 +110,17 @@
       color: var(--muted);
       min-height: 1em;
       font-variant-numeric: tabular-nums;
-      transition: color 520ms ease, opacity 220ms ease;
-    }
-
-    .hint {
-      position: fixed;
-      bottom: max(24px, env(safe-area-inset-bottom));
-      left: max(26px, env(safe-area-inset-left));
-      z-index: 10;
-      font-size: 11px;
-      font-weight: 400;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--muted);
-      opacity: 1;
-      transition: opacity 700ms ease, color 520ms ease;
-    }
-
-    .hint.hidden {
       opacity: 0;
+      transform: translateY(4px);
+      transition:
+        opacity 280ms ease,
+        transform 280ms ease,
+        color 520ms ease;
+    }
+
+    .result.visible {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .overlay {
@@ -164,8 +145,12 @@
       pointer-events: auto;
     }
 
+    .wheel-wrap {
+      text-align: center;
+    }
+
     .wheel {
-      width: 112px;
+      width: 124px;
       height: 246px;
       overflow-y: auto;
       overscroll-behavior: contain;
@@ -197,7 +182,7 @@
       height: 96px;
     }
 
-    .minute-option {
+    .wheel-option {
       height: 54px;
       display: grid;
       place-items: center;
@@ -211,7 +196,6 @@
 
     .picker-caption {
       margin-top: 20px;
-      text-align: center;
       font-size: 10px;
       font-weight: 500;
       letter-spacing: 0.28em;
@@ -221,7 +205,7 @@
 
     @media (max-width: 520px) {
       .practice {
-        grid-template-rows: 24px 136px 88px;
+        grid-template-rows: 136px 88px;
       }
 
       .result {
@@ -235,19 +219,16 @@
   <div id="timer" class="timer">12:00</div>
 
   <div class="page">
-    <main class="practice" id="practice">
-      <div class="label">FOCUS</div>
+    <main class="practice">
       <div id="operation" class="operation"></div>
       <div id="result" class="result"></div>
     </main>
   </div>
 
-  <div id="hint" class="hint">tap</div>
-
   <div id="overlay" class="overlay">
-    <div>
-      <div id="wheel" class="wheel" aria-label="Seleccionar minutos"></div>
-      <div class="picker-caption">minutos</div>
+    <div class="wheel-wrap">
+      <div id="wheel" class="wheel"></div>
+      <div id="pickerCaption" class="picker-caption"></div>
     </div>
   </div>
 
@@ -255,26 +236,52 @@
     const operationEl = document.querySelector("#operation");
     const resultEl = document.querySelector("#result");
     const timerEl = document.querySelector("#timer");
-    const hintEl = document.querySelector("#hint");
     const overlayEl = document.querySelector("#overlay");
     const wheelEl = document.querySelector("#wheel");
+    const pickerCaptionEl = document.querySelector("#pickerCaption");
 
     const DEFAULT_MINUTES = 12;
     const MINUTES_MIN = 1;
     const MINUTES_MAX = 60;
+    const LEVEL_MIN = 1;
+    const LEVEL_MAX = 7;
     const LONG_PRESS_MS = 560;
     const OPTION_HEIGHT = 54;
 
     let selectedMinutes = DEFAULT_MINUTES;
+    let selectedLevel = 1;
     let remainingSeconds = selectedMinutes * 60;
     let current = null;
     let showingResult = false;
     let timerInterval = null;
-    let longPressTimer = null;
-    let longPressTriggered = false;
+    let timerIsHidden = false;
+    let pickerMode = null;
+    let timerLongPress = null;
+    let operationLongPress = null;
+    let timerLongPressTriggered = false;
+    let operationLongPressTriggered = false;
+
+    const levelLabels = {
+      1: "nivel 1",
+      2: "nivel 2",
+      3: "nivel 3",
+      4: "nivel 4",
+      5: "nivel 5",
+      6: "nivel 6",
+      7: "nivel 7"
+    };
 
     function randomInt(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function randomDecimal(min, max, decimals = 1) {
+      const factor = 10 ** decimals;
+      return randomInt(min * factor, max * factor) / factor;
+    }
+
+    function cleanNumber(value) {
+      return Number.isInteger(value) ? String(value) : value.toFixed(1);
     }
 
     function formatTime(totalSeconds) {
@@ -288,6 +295,7 @@
       timerEl.textContent = formatTime(remainingSeconds);
 
       if (remainingSeconds === 0) {
+        timerIsHidden = false;
         timerEl.classList.remove("hidden");
       }
     }
@@ -305,85 +313,158 @@
       }, 1000);
     }
 
-    function hideTimer() {
+    function toggleTimerVisibility() {
       if (remainingSeconds === 0) return;
-      timerEl.classList.add("hidden");
+
+      timerIsHidden = !timerIsHidden;
+      timerEl.classList.toggle("hidden", timerIsHidden);
     }
 
-    function buildWheel() {
+    function buildWheel(min, max, formatter) {
       wheelEl.innerHTML = "";
 
-      for (let minute = MINUTES_MIN; minute <= MINUTES_MAX; minute += 1) {
+      for (let value = min; value <= max; value += 1) {
         const option = document.createElement("div");
-        option.className = "minute-option";
-        option.textContent = minute;
-        option.dataset.minute = String(minute);
+        option.className = "wheel-option";
+        option.textContent = formatter(value);
+        option.dataset.value = String(value);
         wheelEl.appendChild(option);
       }
     }
 
-    function scrollWheelTo(minutes) {
-      wheelEl.scrollTop = (minutes - MINUTES_MIN) * OPTION_HEIGHT;
+    function scrollWheelTo(value, min) {
+      wheelEl.scrollTop = (value - min) * OPTION_HEIGHT;
     }
 
-    function getWheelMinutes() {
+    function getWheelValue(min, max) {
       const index = Math.round(wheelEl.scrollTop / OPTION_HEIGHT);
-      return Math.min(MINUTES_MAX, Math.max(MINUTES_MIN, index + MINUTES_MIN));
+      return Math.min(max, Math.max(min, index + min));
     }
 
     function openMinutePicker() {
-      timerEl.classList.remove("hidden");
+      pickerMode = "minutes";
+      pickerCaptionEl.textContent = "minutos";
+      buildWheel(MINUTES_MIN, MINUTES_MAX, value => String(value));
       overlayEl.classList.add("open");
-      requestAnimationFrame(() => scrollWheelTo(selectedMinutes));
+      timerIsHidden = false;
+      timerEl.classList.remove("hidden");
+      requestAnimationFrame(() => scrollWheelTo(selectedMinutes, MINUTES_MIN));
     }
 
-    function closeMinutePickerAndRestart() {
+    function openLevelPicker() {
+      pickerMode = "level";
+      pickerCaptionEl.textContent = "complejidad";
+      buildWheel(LEVEL_MIN, LEVEL_MAX, value => String(value));
+      overlayEl.classList.add("open");
+      requestAnimationFrame(() => scrollWheelTo(selectedLevel, LEVEL_MIN));
+    }
+
+    function closePicker() {
       if (!overlayEl.classList.contains("open")) return;
 
-      selectedMinutes = getWheelMinutes();
-      overlayEl.classList.remove("open");
-      timerEl.classList.remove("hidden");
-      startTimer(selectedMinutes * 60);
-    }
-
-    function createMultiplication() {
-      const oneDigitByTwoDigits = Math.random() < 0.35;
-
-      if (oneDigitByTwoDigits) {
-        const a = randomInt(2, 9);
-        const b = randomInt(10, 99);
-
-        return {
-          text: `${a} × ${b}`,
-          result: a * b
-        };
+      if (pickerMode === "minutes") {
+        selectedMinutes = getWheelValue(MINUTES_MIN, MINUTES_MAX);
+        startTimer(selectedMinutes * 60);
       }
 
-      const a = randomInt(10, 99);
-      const b = randomInt(10, 99);
+      if (pickerMode === "level") {
+        selectedLevel = getWheelValue(LEVEL_MIN, LEVEL_MAX);
+        showNewOperation();
+      }
 
-      return {
-        text: `${a} × ${b}`,
-        result: a * b
-      };
+      pickerMode = null;
+      overlayEl.classList.remove("open");
     }
 
-    function createSubtraction() {
-      const a = randomInt(20, 99);
-      const b = randomInt(2, a - 1);
+    function multiplicationOneByTwo() {
+      const a = randomInt(2, 9);
+      const b = randomInt(10, 99);
+      return { text: `${a} × ${b}`, result: a * b };
+    }
 
-      return {
-        text: `${a} − ${b}`,
-        result: a - b
-      };
+    function multiplicationTwoByTwo(min = 10, max = 99) {
+      const a = randomInt(min, max);
+      const b = randomInt(min, max);
+      return { text: `${a} × ${b}`, result: a * b };
+    }
+
+    function subtraction(minA, maxA, minB = 2) {
+      const a = randomInt(minA, maxA);
+      const b = randomInt(minB, a - 1);
+      return { text: `${a} − ${b}`, result: a - b };
+    }
+
+    function squareRoot() {
+      const root = randomInt(4, 30);
+      const value = root * root;
+      return { text: `√${value}`, result: root };
+    }
+
+    function decimalOperation() {
+      const a = randomDecimal(12, 99, 1);
+      const b = randomDecimal(2, Math.floor(a) - 1, 1);
+      const result = Math.round((a - b) * 10) / 10;
+      return { text: `${cleanNumber(a)} − ${cleanNumber(b)}`, result: cleanNumber(result) };
+    }
+
+    function divisionExact() {
+      const result = randomInt(6, 40);
+      const divisor = randomInt(2, 12);
+      const dividend = result * divisor;
+      return { text: `${dividend} ÷ ${divisor}`, result };
+    }
+
+    function mixedThreeTerm() {
+      const a = randomInt(10, 99);
+      const b = randomInt(2, 9);
+      const c = randomInt(10, 99);
+      return { text: `${a} + ${b} × ${c}`, result: a + b * c };
+    }
+
+    function createMultiplicationForLevel(level) {
+      if (level === 1) {
+        return Math.random() < 0.35 ? multiplicationOneByTwo() : multiplicationTwoByTwo();
+      }
+
+      if (level === 2) {
+        return Math.random() < 0.5 ? multiplicationTwoByTwo(10, 99) : multiplicationOneByTwo();
+      }
+
+      if (level === 3) {
+        return multiplicationTwoByTwo(20, 99);
+      }
+
+      if (level === 4) {
+        return Math.random() < 0.5 ? multiplicationTwoByTwo(30, 99) : divisionExact();
+      }
+
+      if (level === 5) {
+        return Math.random() < 0.45 ? multiplicationTwoByTwo(50, 140) : squareRoot();
+      }
+
+      if (level === 6) {
+        return Math.random() < 0.5 ? mixedThreeTerm() : multiplicationTwoByTwo(80, 180);
+      }
+
+      return Math.random() < 0.4 ? mixedThreeTerm() : multiplicationTwoByTwo(120, 260);
+    }
+
+    function createSubtractionForLevel(level) {
+      if (level === 1) return subtraction(20, 99);
+      if (level === 2) return subtraction(50, 180);
+      if (level === 3) return subtraction(100, 400);
+      if (level === 4) return decimalOperation();
+      if (level === 5) return subtraction(300, 999);
+      if (level === 6) return decimalOperation();
+      return subtraction(1000, 5000);
     }
 
     function createOperation() {
-      const isMultiplication = Math.random() < 0.8;
+      const isMultiplicationFamily = Math.random() < 0.8;
 
-      return isMultiplication
-        ? createMultiplication()
-        : createSubtraction();
+      return isMultiplicationFamily
+        ? createMultiplicationForLevel(selectedLevel)
+        : createSubtractionForLevel(selectedLevel);
     }
 
     function showNewOperation() {
@@ -392,20 +473,27 @@
 
       operationEl.textContent = current.text;
       resultEl.textContent = "";
+      resultEl.classList.remove("visible");
+    }
+
+    function showResult() {
+      resultEl.textContent = current.result;
+      requestAnimationFrame(() => {
+        resultEl.classList.add("visible");
+      });
+      showingResult = true;
     }
 
     function advancePractice() {
       if (!showingResult) {
-        resultEl.textContent = current.result;
-        showingResult = true;
+        showResult();
         return;
       }
 
       showNewOperation();
     }
 
-    function toggleDarkMode(event) {
-      event.stopPropagation();
+    function toggleDarkMode() {
       document.body.classList.toggle("dark");
     }
 
@@ -416,46 +504,66 @@
       advancePractice();
     });
 
-    operationEl.addEventListener("click", toggleDarkMode);
-
     timerEl.addEventListener("click", (event) => {
       event.stopPropagation();
 
-      if (!longPressTriggered) {
-        hideTimer();
+      if (!timerLongPressTriggered) {
+        toggleTimerVisibility();
       }
 
-      longPressTriggered = false;
+      timerLongPressTriggered = false;
     });
 
     timerEl.addEventListener("pointerdown", () => {
-      longPressTriggered = false;
+      timerLongPressTriggered = false;
 
-      longPressTimer = setTimeout(() => {
-        longPressTriggered = true;
+      timerLongPress = setTimeout(() => {
+        timerLongPressTriggered = true;
         openMinutePicker();
       }, LONG_PRESS_MS);
     });
 
     timerEl.addEventListener("pointerup", () => {
-      clearTimeout(longPressTimer);
+      clearTimeout(timerLongPress);
     });
 
     timerEl.addEventListener("pointerleave", () => {
-      clearTimeout(longPressTimer);
+      clearTimeout(timerLongPress);
+    });
+
+    operationEl.addEventListener("click", (event) => {
+      event.stopPropagation();
+
+      if (!operationLongPressTriggered) {
+        toggleDarkMode();
+      }
+
+      operationLongPressTriggered = false;
+    });
+
+    operationEl.addEventListener("pointerdown", () => {
+      operationLongPressTriggered = false;
+
+      operationLongPress = setTimeout(() => {
+        operationLongPressTriggered = true;
+        openLevelPicker();
+      }, LONG_PRESS_MS);
+    });
+
+    operationEl.addEventListener("pointerup", () => {
+      clearTimeout(operationLongPress);
+    });
+
+    operationEl.addEventListener("pointerleave", () => {
+      clearTimeout(operationLongPress);
     });
 
     overlayEl.addEventListener("click", (event) => {
       if (event.target === overlayEl) {
-        closeMinutePickerAndRestart();
+        closePicker();
       }
     });
 
-    setTimeout(() => {
-      hintEl.classList.add("hidden");
-    }, 5000);
-
-    buildWheel();
     showNewOperation();
     startTimer();
   </script>
