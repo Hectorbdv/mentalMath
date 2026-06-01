@@ -7,10 +7,9 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=Inter:wght@300;400;500&family=Libre+Franklin:wght@300;400;500&family=Roboto:wght@300;400;500&family=Source+Sans+3:wght@300;400;500&family=Work+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=Inter:wght@300;400;500&family=Libre+Franklin:wght@300;400;500&family=Roboto:wght@300;400;500&family=Source+Sans+3:wght@300;400;500&display=swap" rel="stylesheet">
 
   <link rel="manifest" href="manifest.json">
-  
   <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
@@ -52,8 +51,7 @@
       -webkit-touch-callout: none;
     }
 
-    html,
-    body {
+    html, body {
       margin: 0;
       width: 100%;
       height: 100%;
@@ -95,53 +93,14 @@
 
     .control.hidden { opacity: 0; pointer-events: none; }
 
-    /* Ghost tap zones — invisible, only active when control is hidden */
-    .ghost-zone {
-      position: fixed;
-      z-index: 19;
-      /* sized to roughly match each control's tap region */
-    }
+    .ghost-zone { position: fixed; z-index: 19; }
+    .ghost-zone.timer-ghost    { top: max(14px, env(safe-area-inset-top));    right: max(16px, env(safe-area-inset-right)); width: 80px; height: 44px; }
+    .ghost-zone.settings-ghost { top: max(14px, env(safe-area-inset-top));    left:  max(16px, env(safe-area-inset-left));  width: 44px; height: 44px; }
+    .ghost-zone.info-ghost     { bottom: max(14px, env(safe-area-inset-bottom)); left: max(16px, env(safe-area-inset-left)); width: 44px; height: 44px; }
 
-    .ghost-zone.timer-ghost {
-      top: max(14px, env(safe-area-inset-top));
-      right: max(16px, env(safe-area-inset-right));
-      width: 80px;
-      height: 44px;
-    }
-
-    .ghost-zone.settings-ghost {
-      top: max(14px, env(safe-area-inset-top));
-      left: max(16px, env(safe-area-inset-left));
-      width: 44px;
-      height: 44px;
-    }
-
-    .ghost-zone.info-ghost {
-      bottom: max(14px, env(safe-area-inset-bottom));
-      left: max(16px, env(safe-area-inset-left));
-      width: 44px;
-      height: 44px;
-    }
-
-    .timer {
-      top: max(22px, env(safe-area-inset-top));
-      right: max(24px, env(safe-area-inset-right));
-      padding-left: 18px;
-    }
-
-    .style-control {
-      top: max(22px, env(safe-area-inset-top));
-      left: max(24px, env(safe-area-inset-left));
-      padding-right: 18px;
-    }
-
-    .info-control {
-      bottom: max(22px, env(safe-area-inset-bottom));
-      left: max(24px, env(safe-area-inset-left));
-      padding-right: 18px;
-      font-size: 13px;
-      text-transform: lowercase;
-    }
+    .timer        { top: max(22px, env(safe-area-inset-top));    right: max(24px, env(safe-area-inset-right)); padding-left: 18px; }
+    .style-control{ top: max(22px, env(safe-area-inset-top));    left:  max(24px, env(safe-area-inset-left));  padding-right: 18px; }
+    .info-control { bottom: max(22px, env(safe-area-inset-bottom)); left: max(24px, env(safe-area-inset-left)); padding-right: 18px; font-size: 13px; text-transform: lowercase; }
 
     .practice {
       width: min(100%, 860px);
@@ -180,13 +139,9 @@
       transition: opacity 280ms ease, transform 280ms ease, color 520ms ease;
     }
 
-    .result.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    .result.visible { opacity: 1; transform: translateY(0); }
 
-    .overlay,
-    .info-overlay {
+    .overlay, .info-overlay {
       position: fixed;
       inset: 0;
       z-index: 50;
@@ -202,13 +157,8 @@
     body.dark .overlay,
     body.dark .info-overlay { background: rgba(255, 255, 255, 0.035); }
 
-    .overlay.open,
-    .info-overlay.open {
-      opacity: 1;
-      pointer-events: auto;
-    }
+    .overlay.open, .info-overlay.open { opacity: 1; pointer-events: auto; }
 
-    /* Triple wheel layout for settings: font + color + level */
     .triple-wheel-wrap {
       display: grid;
       grid-template-columns: 138px 138px 100px;
@@ -232,16 +182,9 @@
     }
 
     .triple-wheel-wrap .wheel { margin: 0 auto; }
+    .level-wheel-col .wheel   { width: 86px; }
 
-    /* Level wheel narrower */
-    .level-wheel-col .wheel { width: 86px; }
-
-    .wheel::before,
-    .wheel::after {
-      content: "";
-      display: block;
-      height: 96px;
-    }
+    .wheel::before, .wheel::after { content: ""; display: block; height: 96px; }
 
     .wheel-option {
       height: 54px;
@@ -257,38 +200,19 @@
       transition: font-weight 180ms ease, opacity 180ms ease;
     }
 
-    /* Selected item highlight — bold and full opacity */
-    .wheel-option.is-selected {
-      font-weight: 500;
-      opacity: 1;
-    }
+    .wheel-option.is-selected         { font-weight: 500; opacity: 1; }
+    .wheel-option:not(.is-selected)   { opacity: 0.38; }
 
-    /* Non-selected items slightly dimmed */
-    .wheel-option:not(.is-selected) {
-      opacity: 0.38;
-    }
-
-    .style-wheel .wheel-option {
-      font-size: 17px;
-      letter-spacing: -0.035em;
-    }
-
-    .level-wheel .wheel-option {
-      font-size: 28px;
-    }
+    .style-wheel .wheel-option { font-size: 17px; letter-spacing: -0.035em; }
+    .level-wheel .wheel-option { font-size: 28px; }
 
     .color-swatch {
-      width: 34px;
-      height: 34px;
+      width: 34px; height: 34px;
       border-radius: 999px;
       border: 1.5px solid var(--line);
       transition: transform 180ms ease;
     }
-
-    .wheel-option.is-selected .color-swatch {
-      transform: scale(1.18);
-      border-width: 2px;
-    }
+    .wheel-option.is-selected .color-swatch { transform: scale(1.18); border-width: 2px; }
 
     .mini-caption {
       margin-top: 16px;
@@ -320,8 +244,7 @@
     }
 
     .info-list {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       list-style: none;
       display: grid;
       gap: 13px;
@@ -331,32 +254,13 @@
       letter-spacing: -0.015em;
     }
 
-    .info-list strong {
-      font-weight: 500;
-      color: var(--ink);
-    }
-
-    .share-icon {
-      display: inline-block;
-      transform: translateY(-1px);
-      font-size: 15px;
-      margin: 0 2px;
-    }
+    .info-list strong { font-weight: 500; color: var(--ink); }
+    .share-icon { display: inline-block; transform: translateY(-1px); font-size: 15px; margin: 0 2px; }
 
     @media (max-width: 520px) {
-      .practice {
-        height: 236px;
-        grid-template-rows: 136px 100px;
-        transform: translateY(-8px);
-      }
-
+      .practice { height: 236px; grid-template-rows: 136px 100px; transform: translateY(-8px); }
       .result { margin-top: 28px; }
-
-      .triple-wheel-wrap {
-        grid-template-columns: 118px 118px 86px;
-        gap: 10px;
-      }
-
+      .triple-wheel-wrap { grid-template-columns: 118px 118px 86px; gap: 10px; }
       .triple-wheel-wrap .wheel { width: 104px; }
       .level-wheel-col .wheel { width: 76px; }
       .style-wheel .wheel-option { font-size: 16px; }
@@ -369,10 +273,19 @@
   <div id="timer" class="control timer">12:00</div>
   <div id="infoControl" class="control info-control">i</div>
 
-  <!-- Ghost tap zones, only active when corresponding control is hidden -->
-  <div id="timerGhost" class="ghost-zone timer-ghost" hidden></div>
+  <div id="timerGhost"    class="ghost-zone timer-ghost"    hidden></div>
   <div id="settingsGhost" class="ghost-zone settings-ghost" hidden></div>
-  <div id="infoGhost" class="ghost-zone info-ghost" hidden></div>
+  <div id="infoGhost"     class="ghost-zone info-ghost"     hidden></div>
+
+  <!-- SVG displacement filter for wave/refraction effect -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;">
+    <defs>
+      <filter id="refract" x="-25%" y="-25%" width="150%" height="150%">
+        <feTurbulence id="waveTurbulence" type="fractalNoise" baseFrequency="0.013 0.008" numOctaves="3" seed="5" result="noise"/>
+        <feDisplacementMap id="waveDisplace" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+    </defs>
+  </svg>
 
   <div class="page">
     <main class="practice">
@@ -381,7 +294,6 @@
     </main>
   </div>
 
-  <!-- Settings overlay: font + color + level in one triple wheel -->
   <div id="overlay" class="overlay">
     <div id="tripleWheelWrap" class="triple-wheel-wrap">
       <div>
@@ -397,6 +309,10 @@
         <div class="mini-caption">level</div>
       </div>
     </div>
+    <div id="singleWheelWrap" style="text-align:center;display:none;">
+      <div id="minuteWheel" class="wheel"></div>
+      <div class="mini-caption">minutes</div>
+    </div>
   </div>
 
   <div id="infoOverlay" class="info-overlay">
@@ -406,30 +322,17 @@
         <li><strong>tap</strong> — reveal answer, then next</li>
         <li><strong>left edge</strong> — previous</li>
         <li><strong>numbers</strong> — dark mode</li>
-        <li><strong>timer</strong> — set duration · long press hides</li>
-        <li><strong>s</strong> — font, color, level · long press hides</li>
-        <li><strong>i</strong> — this · long press hides</li>
+        <li><strong>timer</strong> — set duration &middot; long press hides</li>
+        <li><strong>s</strong> — font, color, level &middot; long press hides</li>
+        <li><strong>i</strong> — this &middot; long press hides</li>
         <li><strong>long press canvas</strong> — toggle all controls</li>
-        <li><strong>install</strong> — Safari <span class="share-icon">□↑</span> Add to Home Screen</li>
+        <li><strong>install</strong> — Safari <span class="share-icon">&#x2610;&#x2191;</span> Add to Home Screen</li>
       </ul>
     </section>
   </div>
 
   <script>
-    const operationEl = document.querySelector("#operation");
-    const resultEl = document.querySelector("#result");
-    const timerEl = document.querySelector("#timer");
-    const styleControlEl = document.querySelector("#styleControl");
-    const infoControlEl = document.querySelector("#infoControl");
-    const overlayEl = document.querySelector("#overlay");
-    const infoOverlayEl = document.querySelector("#infoOverlay");
-    const fontWheelEl = document.querySelector("#fontWheel");
-    const colorWheelEl = document.querySelector("#colorWheel");
-    const levelWheelEl = document.querySelector("#levelWheel");
-    const timerGhostEl = document.querySelector("#timerGhost");
-    const settingsGhostEl = document.querySelector("#settingsGhost");
-    const infoGhostEl = document.querySelector("#infoGhost");
-
+    // ─── Constants ───────────────────────────────────────────────────────────────
     const DEFAULT_MINUTES = 12;
     const MINUTES_MIN = 1;
     const MINUTES_MAX = 60;
@@ -439,130 +342,203 @@
     const HISTORY_LIMIT = 50;
     const LONG_PRESS_MS = 560;
     const OPTION_HEIGHT = 54;
+    const STORAGE_KEY = "dailymath_prefs";
 
     const FONT_OPTIONS = [
-      { label: "Libre", family: "\"Libre Franklin\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" },
-      { label: "Inter", family: "\"Inter\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" },
-      { label: "Roboto",family: "\"Roboto\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" },
-      { label: "Plex",  family: "\"IBM Plex Sans\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" },
-      { label: "Source",family: "\"Source Sans 3\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" }
+      { label: "Libre", family: '"Libre Franklin", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif' },
+      { label: "Inter", family: '"Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif' },
+      { label: "Roboto",family: '"Roboto", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif' },
+      { label: "Plex",  family: '"IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif' },
+      { label: "Source",family: '"Source Sans 3", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif' }
     ];
 
-    // 5 distinct subtle pastel-neutral colors — seafoam is default (index 2, center)
+    // 5 colors — seafoam at index 2 (center, default)
     const COLOR_OPTIONS = [
-      { bg: "#edf1ec", ink: "#151515", muted: "#7f897d" },  // sage mist
-      { bg: "#eef0f4", ink: "#151515", muted: "#7f8490" },  // cool slate
-      { bg: "#edf2f1", ink: "#151515", muted: "#758987" },  // seafoam (default)
-      { bg: "#f3eeee", ink: "#151515", muted: "#8f8181" },  // blush
-      { bg: "#f2efe6", ink: "#151515", muted: "#8c846f" }   // linen
+      { bg: "#edf1ec", muted: "#7f897d" },  // sage
+      { bg: "#eef0f4", muted: "#7f8490" },  // slate
+      { bg: "#edf2f1", muted: "#758987" },  // seafoam (default)
+      { bg: "#f3eeee", muted: "#8f8181" },  // blush
+      { bg: "#f2efe6", muted: "#8c846f" }   // linen
     ];
 
-    let selectedMinutes = DEFAULT_MINUTES;
-    let selectedLevel = DEFAULT_LEVEL;
-    let selectedFontIndex = 2;
-    let selectedColorIndex = 2;
-    let remainingSeconds = selectedMinutes * 60;
-    let current = null;
-    let history = [];
-    let showingResult = false;
-    let timerInterval = null;
-
-    let timerIsHidden = false;
+    // ─── State ───────────────────────────────────────────────────────────────────
+    let selectedFontIndex  = 2;  // Roboto
+    let selectedColorIndex = 2;  // seafoam
+    let selectedLevel      = DEFAULT_LEVEL;
+    let selectedMinutes    = DEFAULT_MINUTES;
+    let remainingSeconds   = DEFAULT_MINUTES * 60;
+    let current            = null;
+    let history            = [];
+    let showingResult      = false;
+    let timerInterval      = null;
+    let timerIsHidden      = false;
     let styleControlIsHidden = false;
-    let infoControlIsHidden = false;
+    let infoControlIsHidden  = false;
+    let pickerMode         = null; // "settings" | "minutes"
 
-    // Long press state per element
-    let timerLP = null, timerLPFired = false;
-    let settingsLP = null, settingsLPFired = false;
-    let infoLP = null, infoLPFired = false;
-    let canvasLP = null, canvasLPFired = false;
+    // ─── DOM refs ────────────────────────────────────────────────────────────────
+    const operationEl      = document.querySelector("#operation");
+    const resultEl         = document.querySelector("#result");
+    const timerEl          = document.querySelector("#timer");
+    const styleControlEl   = document.querySelector("#styleControl");
+    const infoControlEl    = document.querySelector("#infoControl");
+    const overlayEl        = document.querySelector("#overlay");
+    const infoOverlayEl    = document.querySelector("#infoOverlay");
+    const fontWheelEl      = document.querySelector("#fontWheel");
+    const colorWheelEl     = document.querySelector("#colorWheel");
+    const levelWheelEl     = document.querySelector("#levelWheel");
+    const minuteWheelEl    = document.querySelector("#minuteWheel");
+    const tripleWheelWrapEl= document.querySelector("#tripleWheelWrap");
+    const singleWheelWrapEl= document.querySelector("#singleWheelWrap");
+    const timerGhostEl     = document.querySelector("#timerGhost");
+    const settingsGhostEl  = document.querySelector("#settingsGhost");
+    const infoGhostEl      = document.querySelector("#infoGhost");
+    const pageEl           = document.querySelector(".page");
+    const waveTurbEl       = document.querySelector("#waveTurbulence");
+    const waveDisplaceEl   = document.querySelector("#waveDisplace");
 
-    // ─── Utilities ──────────────────────────────────────────────────────────────
+    // ─── Persistence ─────────────────────────────────────────────────────────────
+    function savePrefs() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          font: selectedFontIndex,
+          color: selectedColorIndex,
+          level: selectedLevel,
+          minutes: selectedMinutes,
+          dark: document.body.classList.contains("dark")
+        }));
+      } catch (_) {}
+    }
 
+    function loadPrefs() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const p = JSON.parse(raw);
+        if (p.font  != null && p.font  >= 0 && p.font  < FONT_OPTIONS.length)  selectedFontIndex  = p.font;
+        if (p.color != null && p.color >= 0 && p.color < COLOR_OPTIONS.length) selectedColorIndex = p.color;
+        if (p.level != null && p.level >= LEVEL_MIN && p.level <= LEVEL_MAX)   selectedLevel      = p.level;
+        if (p.minutes != null && p.minutes >= MINUTES_MIN && p.minutes <= MINUTES_MAX) selectedMinutes = p.minutes;
+        if (p.dark) document.body.classList.add("dark");
+      } catch (_) {}
+    }
+
+    // ─── Wave effect ─────────────────────────────────────────────────────────────
+    let waveAnimFrame = null;
+    let waveActive    = false;
+
+    function triggerWave() {
+      if (waveActive) return;
+      waveActive = true;
+      pageEl.style.filter = "url(#refract)";
+
+      let startTime = null;
+      const DURATION  = 5400;
+      const MAX_SCALE = 16;
+
+      function step(ts) {
+        if (!startTime) startTime = ts;
+        const t = Math.min((ts - startTime) / DURATION, 1);
+
+        // Envelope: slow rise → hold → slow fade
+        let env;
+        if      (t < 0.15) env = t / 0.15;
+        else if (t < 0.70) env = 1;
+        else               env = 1 - (t - 0.70) / 0.30;
+
+        if (waveDisplaceEl) waveDisplaceEl.setAttribute("scale", String(env * MAX_SCALE));
+        if (waveTurbEl) {
+          const f = 0.013 + env * 0.005;
+          waveTurbEl.setAttribute("baseFrequency", `${f.toFixed(4)} ${(f * 0.6).toFixed(4)}`);
+        }
+
+        if (t < 1) {
+          waveAnimFrame = requestAnimationFrame(step);
+        } else {
+          pageEl.style.filter = "";
+          waveActive = false;
+          waveAnimFrame = null;
+        }
+      }
+
+      waveAnimFrame = requestAnimationFrame(step);
+    }
+
+    function cancelWave() {
+      if (waveAnimFrame) { cancelAnimationFrame(waveAnimFrame); waveAnimFrame = null; }
+      pageEl.style.filter = "";
+      waveActive = false;
+    }
+
+    // ─── Utilities ───────────────────────────────────────────────────────────────
     function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
     function choose(weightedItems) {
-      const total = weightedItems.reduce((sum, item) => sum + item.weight, 0);
-      let value = Math.random() * total;
-      for (const item of weightedItems) {
-        value -= item.weight;
-        if (value <= 0) return item.create();
-      }
+      const total = weightedItems.reduce((s, i) => s + i.weight, 0);
+      let v = Math.random() * total;
+      for (const item of weightedItems) { v -= item.weight; if (v <= 0) return item.create(); }
       return weightedItems[weightedItems.length - 1].create();
     }
 
     function cleanNumber(value) {
-      const rounded = Math.round(value * 10000) / 10000;
-      if (Number.isInteger(rounded)) return String(rounded);
-      return String(rounded).replace(/0+$/, "").replace(/\.$/, "");
+      const r = Math.round(value * 10000) / 10000;
+      if (Number.isInteger(r)) return String(r);
+      return String(r).replace(/0+$/, "").replace(/\.$/, "");
     }
 
     function numberWithFigures(figures, allowDecimal = true) {
       let raw = "";
-      for (let i = 0; i < figures; i += 1) {
-        const minDigit = i === 0 ? 1 : 0;
-        raw += String(randomInt(minDigit, 9));
-      }
+      for (let i = 0; i < figures; i++) raw += String(randomInt(i === 0 ? 1 : 0, 9));
       if (!allowDecimal) return Number(raw);
-      const decimalPosition = randomInt(0, figures);
-      if (decimalPosition === 0) return Number(raw);
-      if (decimalPosition === figures) return Number(`0.${raw}`);
-      return Number(`${raw.slice(0, decimalPosition)}.${raw.slice(decimalPosition)}`);
+      const dp = randomInt(0, figures);
+      if (dp === 0) return Number(raw);
+      if (dp === figures) return Number(`0.${raw}`);
+      return Number(`${raw.slice(0, dp)}.${raw.slice(dp)}`);
     }
 
-    function formatTime(totalSeconds) {
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-      return `${minutes}:${String(seconds).padStart(2, "0")}`;
-    }
+    function formatTime(s) { return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`; }
 
-    // ─── Timer ──────────────────────────────────────────────────────────────────
-
+    // ─── Timer ───────────────────────────────────────────────────────────────────
     function renderTimer() {
       timerEl.textContent = formatTime(remainingSeconds);
       if (remainingSeconds === 0) {
         timerIsHidden = false;
         timerEl.classList.remove("hidden");
         timerGhostEl.hidden = true;
+        triggerWave();
       }
     }
 
-    function startTimer(seconds = selectedMinutes * 60) {
+    function startTimer(seconds) {
+      cancelWave();
       clearInterval(timerInterval);
-      remainingSeconds = seconds;
+      remainingSeconds = seconds != null ? seconds : selectedMinutes * 60;
       renderTimer();
       timerInterval = setInterval(() => {
-        if (remainingSeconds > 0) {
-          remainingSeconds -= 1;
-          renderTimer();
-        }
+        if (remainingSeconds > 0) { remainingSeconds--; renderTimer(); }
       }, 1000);
     }
 
-    // ─── Control visibility ──────────────────────────────────────────────────────
-
-    function setControlVisible(el, ghostEl, visible) {
+    // ─── Control visibility ───────────────────────────────────────────────────────
+    function setControlVisible(el, ghost, visible) {
       el.classList.toggle("hidden", !visible);
-      ghostEl.hidden = visible; // ghost only active when control is hidden
+      ghost.hidden = visible;
     }
 
-    function hideControl(el, ghostEl) { setControlVisible(el, ghostEl, false); }
-    function showControl(el, ghostEl) { setControlVisible(el, ghostEl, true); }
-
-    function hideTimer()    { timerIsHidden = true;         hideControl(timerEl, timerGhostEl); }
-    function showTimer()    { timerIsHidden = false;        showControl(timerEl, timerGhostEl); }
-    function hideSettings() { styleControlIsHidden = true;  hideControl(styleControlEl, settingsGhostEl); }
-    function showSettings() { styleControlIsHidden = false; showControl(styleControlEl, settingsGhostEl); }
-    function hideInfo()     { infoControlIsHidden = true;   hideControl(infoControlEl, infoGhostEl); }
-    function showInfo()     { infoControlIsHidden = false;  showControl(infoControlEl, infoGhostEl); }
+    function hideTimer()    { timerIsHidden = true;         setControlVisible(timerEl,       timerGhostEl,    false); }
+    function showTimer()    { timerIsHidden = false;        setControlVisible(timerEl,       timerGhostEl,    true);  }
+    function hideSettings() { styleControlIsHidden = true;  setControlVisible(styleControlEl,settingsGhostEl, false); }
+    function showSettings() { styleControlIsHidden = false; setControlVisible(styleControlEl,settingsGhostEl, true);  }
+    function hideInfo()     { infoControlIsHidden = true;   setControlVisible(infoControlEl, infoGhostEl,     false); }
+    function showInfo()     { infoControlIsHidden = false;  setControlVisible(infoControlEl, infoGhostEl,     true);  }
 
     function anyVisible() { return !timerIsHidden || !styleControlIsHidden || !infoControlIsHidden; }
 
     function toggleAllControls() {
       if (anyVisible()) {
-        if (!timerIsHidden) hideTimer();
-        if (!styleControlIsHidden) hideSettings();
-        if (!infoControlIsHidden) hideInfo();
+        if (!timerIsHidden)         hideTimer();
+        if (!styleControlIsHidden)  hideSettings();
+        if (!infoControlIsHidden)   hideInfo();
       } else {
         if (remainingSeconds > 0) showTimer();
         showSettings();
@@ -570,55 +546,68 @@
       }
     }
 
-    // ─── Wheel helpers ───────────────────────────────────────────────────────────
+    // ─── Style ───────────────────────────────────────────────────────────────────
+    function applyStylePreferences() {
+      const font  = FONT_OPTIONS[selectedFontIndex];
+      const color = COLOR_OPTIONS[selectedColorIndex];
+      document.documentElement.style.setProperty("--font-main", font.family);
+      document.body.style.fontFamily = font.family;
+      document.documentElement.style.setProperty("--bg",       color.bg);
+      document.documentElement.style.setProperty("--dark-ink", color.bg);
+      document.documentElement.style.setProperty("--muted",    color.muted);
+      // Update panel color to match bg
+      const r = parseInt(color.bg.slice(1,3),16);
+      const g = parseInt(color.bg.slice(3,5),16);
+      const b = parseInt(color.bg.slice(5,7),16);
+      document.documentElement.style.setProperty("--panel", `rgba(${r},${g},${b},0.82)`);
+      const meta = document.querySelector("meta[name='theme-color']");
+      if (meta) meta.setAttribute("content", color.bg);
+    }
 
-    function buildWheel(targetEl, count, renderer) {
-      targetEl.innerHTML = "";
+    // ─── Wheel helpers ────────────────────────────────────────────────────────────
+    function buildWheel(el, count, renderer) {
+      el.innerHTML = "";
       for (let i = 0; i < count; i++) {
-        const option = document.createElement("div");
-        option.className = "wheel-option";
-        option.dataset.index = String(i);
+        const opt = document.createElement("div");
+        opt.className = "wheel-option";
         const rendered = renderer(i);
-        if (rendered instanceof HTMLElement) option.appendChild(rendered);
-        else option.textContent = rendered;
-        targetEl.appendChild(option);
+        if (rendered instanceof HTMLElement) opt.appendChild(rendered);
+        else opt.textContent = rendered;
+        el.appendChild(opt);
       }
     }
 
-    function scrollWheelTo(targetEl, index) {
-      targetEl.scrollTop = index * OPTION_HEIGHT;
+    function scrollWheelTo(el, index) { el.scrollTop = index * OPTION_HEIGHT; }
+
+    function getWheelIndex(el, count) {
+      return Math.min(count - 1, Math.max(0, Math.round(el.scrollTop / OPTION_HEIGHT)));
     }
 
-    function getWheelIndex(targetEl, count) {
-      const index = Math.round(targetEl.scrollTop / OPTION_HEIGHT);
-      return Math.min(count - 1, Math.max(0, index));
+    function updateWheelSelection(el, count) {
+      const cur = getWheelIndex(el, count);
+      el.querySelectorAll(".wheel-option").forEach((o, i) => o.classList.toggle("is-selected", i === cur));
     }
 
-    // Update selected styling as user scrolls
-    function updateWheelSelection(targetEl, count) {
-      const current = getWheelIndex(targetEl, count);
-      targetEl.querySelectorAll(".wheel-option").forEach((el, i) => {
-        el.classList.toggle("is-selected", i === current);
-      });
+    function attachScrollHighlight(el, count) {
+      el.addEventListener("scroll", () => updateWheelSelection(el, count), { passive: true });
     }
 
-    function attachScrollHighlight(targetEl, count) {
-      targetEl.addEventListener("scroll", () => updateWheelSelection(targetEl, count), { passive: true });
-    }
+    // ─── Pickers ─────────────────────────────────────────────────────────────────
+    function openSettings() {
+      pickerMode = "settings";
+      tripleWheelWrapEl.style.display = "";
+      singleWheelWrapEl.style.display = "none";
 
-    // ─── Settings picker (font + color + level combined) ─────────────────────────
-
-    function openSettingsPicker() {
-      buildWheel(fontWheelEl, FONT_OPTIONS.length, i => FONT_OPTIONS[i].label);
-      buildWheel(colorWheelEl, COLOR_OPTIONS.length, i => {
-        const swatch = document.createElement("span");
-        swatch.className = "color-swatch";
-        swatch.style.background = COLOR_OPTIONS[i].bg;
-        return swatch;
+      buildWheel(fontWheelEl,  FONT_OPTIONS.length,          i => FONT_OPTIONS[i].label);
+      buildWheel(colorWheelEl, COLOR_OPTIONS.length,         i => {
+        const sw = document.createElement("span");
+        sw.className = "color-swatch";
+        sw.style.background = COLOR_OPTIONS[i].bg;
+        return sw;
       });
       buildWheel(levelWheelEl, LEVEL_MAX - LEVEL_MIN + 1, i => String(i + LEVEL_MIN));
 
-      attachScrollHighlight(fontWheelEl, FONT_OPTIONS.length);
+      attachScrollHighlight(fontWheelEl,  FONT_OPTIONS.length);
       attachScrollHighlight(colorWheelEl, COLOR_OPTIONS.length);
       attachScrollHighlight(levelWheelEl, LEVEL_MAX - LEVEL_MIN + 1);
 
@@ -627,76 +616,32 @@
       styleControlEl.classList.remove("hidden");
 
       requestAnimationFrame(() => {
-        scrollWheelTo(fontWheelEl, selectedFontIndex);
+        scrollWheelTo(fontWheelEl,  selectedFontIndex);
         scrollWheelTo(colorWheelEl, selectedColorIndex);
         scrollWheelTo(levelWheelEl, selectedLevel - LEVEL_MIN);
-        updateWheelSelection(fontWheelEl, FONT_OPTIONS.length);
+        updateWheelSelection(fontWheelEl,  FONT_OPTIONS.length);
         updateWheelSelection(colorWheelEl, COLOR_OPTIONS.length);
         updateWheelSelection(levelWheelEl, LEVEL_MAX - LEVEL_MIN + 1);
       });
     }
 
-    // ─── Minutes picker (timer long-press → now just tap) ────────────────────────
-    // Reuses overlay with a single wheel column for minutes.
-    // We keep this separate because the settings overlay is triple-wheel.
-    // For simplicity we open the settings overlay in "minutes mode" using a hidden flag.
-
-    let pickerMode = null; // "settings" | "minutes"
-
-    const singleWheelWrapEl = (() => {
-      // Create a single-wheel wrapper dynamically and append to overlay
-      const wrap = document.createElement("div");
-      wrap.id = "singleWheelWrap";
-      wrap.style.cssText = "text-align:center; display:none;";
-      wrap.innerHTML = `<div id="minuteWheel" class="wheel"></div><div class="mini-caption">minutes</div>`;
-      wrap.hidden = true;
-      overlayEl.appendChild(wrap);
-      return wrap;
-    })();
-    const minuteWheelEl = document.querySelector("#minuteWheel");
-    const tripleWheelWrapEl = document.querySelector("#tripleWheelWrap");
-
     function openMinutePicker() {
       pickerMode = "minutes";
-      // Hide settings wheels, show only minute wheel
-      tripleWheelWrapEl.hidden = true;
       tripleWheelWrapEl.style.display = "none";
-      singleWheelWrapEl.hidden = false;
       singleWheelWrapEl.style.display = "";
+
       buildWheel(minuteWheelEl, MINUTES_MAX - MINUTES_MIN + 1, i => String(i + MINUTES_MIN));
       attachScrollHighlight(minuteWheelEl, MINUTES_MAX - MINUTES_MIN + 1);
+
       overlayEl.classList.add("open");
       timerIsHidden = false;
       timerEl.classList.remove("hidden");
       timerGhostEl.hidden = true;
+
       requestAnimationFrame(() => {
         scrollWheelTo(minuteWheelEl, selectedMinutes - MINUTES_MIN);
         updateWheelSelection(minuteWheelEl, MINUTES_MAX - MINUTES_MIN + 1);
       });
-    }
-
-    function openSettings() {
-      pickerMode = "settings";
-      tripleWheelWrapEl.hidden = false;
-      tripleWheelWrapEl.style.display = "";
-      singleWheelWrapEl.hidden = true;
-      singleWheelWrapEl.style.display = "none";
-      openSettingsPicker();
-    }
-
-    function applyStylePreferences() {
-      const font = FONT_OPTIONS[selectedFontIndex];
-      const color = COLOR_OPTIONS[selectedColorIndex];
-      // Apply font to the whole document
-      document.documentElement.style.setProperty("--font-main", font.family);
-      document.body.style.fontFamily = font.family;
-      // Apply color palette
-      document.documentElement.style.setProperty("--bg", color.bg);
-      document.documentElement.style.setProperty("--dark-ink", color.bg);
-      document.documentElement.style.setProperty("--muted", color.muted);
-      // Also update dark-bg-based dark-ink for dark mode consistency
-      const themeMeta = document.querySelector("meta[name='theme-color']");
-      if (themeMeta) themeMeta.setAttribute("content", color.bg);
     }
 
     function closePicker() {
@@ -705,91 +650,69 @@
       if (pickerMode === "minutes") {
         selectedMinutes = getWheelIndex(minuteWheelEl, MINUTES_MAX - MINUTES_MIN + 1) + MINUTES_MIN;
         startTimer(selectedMinutes * 60);
+        savePrefs();
       }
 
       if (pickerMode === "settings") {
-        const newFontIndex = getWheelIndex(fontWheelEl, FONT_OPTIONS.length);
-        const newColorIndex = getWheelIndex(colorWheelEl, COLOR_OPTIONS.length);
+        const newFont  = getWheelIndex(fontWheelEl,  FONT_OPTIONS.length);
+        const newColor = getWheelIndex(colorWheelEl, COLOR_OPTIONS.length);
         const newLevel = getWheelIndex(levelWheelEl, LEVEL_MAX - LEVEL_MIN + 1) + LEVEL_MIN;
-
         const levelChanged = newLevel !== selectedLevel;
-        selectedFontIndex = newFontIndex;
-        selectedColorIndex = newColorIndex;
-        selectedLevel = newLevel;
-
+        selectedFontIndex  = newFont;
+        selectedColorIndex = newColor;
+        selectedLevel      = newLevel;
         applyStylePreferences();
+        savePrefs();
         if (levelChanged) showNewOperation();
       }
 
       pickerMode = null;
       overlayEl.classList.remove("open");
-      // Restore triple wheel for next open, hide single
-      tripleWheelWrapEl.hidden = false;
       tripleWheelWrapEl.style.display = "";
-      singleWheelWrapEl.hidden = true;
       singleWheelWrapEl.style.display = "none";
     }
 
     // ─── Operations ──────────────────────────────────────────────────────────────
-
-    function multiplicationWithFigures(figuresA, figuresB) {
-      const a = numberWithFigures(figuresA, true);
-      const b = numberWithFigures(figuresB, true);
-      const result = Math.round(a * b * 10000) / 10000;
-      return { text: `${cleanNumber(a)} × ${cleanNumber(b)}`, result: cleanNumber(result) };
+    function multiplicationWithFigures(fA, fB) {
+      const a = numberWithFigures(fA, true), b = numberWithFigures(fB, true);
+      return { text: `${cleanNumber(a)} × ${cleanNumber(b)}`, result: cleanNumber(Math.round(a*b*10000)/10000) };
     }
 
-    function subtractionWithFigures(figuresA, figuresB) {
-      const a = numberWithFigures(figuresA, true);
-      const b = numberWithFigures(figuresB, true);
-      const result = Math.round((a - b) * 10000) / 10000;
-      return { text: `${cleanNumber(a)} − ${cleanNumber(b)}`, result: cleanNumber(result) };
+    function subtractionWithFigures(fA, fB) {
+      const a = numberWithFigures(fA, true), b = numberWithFigures(fB, true);
+      return { text: `${cleanNumber(a)} − ${cleanNumber(b)}`, result: cleanNumber(Math.round((a-b)*10000)/10000) };
     }
 
     function squareRootWithRadicandDigits(digits) {
-      const minRadicand = 10 ** (digits - 1);
-      const maxRadicand = 10 ** digits - 1;
-      const minRoot = Math.ceil(Math.sqrt(minRadicand));
-      const maxRoot = Math.floor(Math.sqrt(maxRadicand));
-      const root = randomInt(minRoot, maxRoot);
-      const radicand = root * root;
-      return { text: `√${radicand}`, result: root };
-    }
-
-    function createLevelOneOperation() {
-      const oneDigitFirst = Math.random() < 0.5;
-      return choose([
-        { weight: 80, create: () => oneDigitFirst ? multiplicationWithFigures(1, 2) : multiplicationWithFigures(2, 1) },
-        { weight: 20, create: () => oneDigitFirst ? subtractionWithFigures(1, 2) : subtractionWithFigures(2, 1) }
-      ]);
-    }
-
-    function createLevelTwoOperation() {
-      return choose([
-        { weight: 72, create: () => multiplicationWithFigures(2, 2) },
-        { weight: 18, create: () => subtractionWithFigures(2, 2) },
-        { weight: 10, create: () => squareRootWithRadicandDigits(Math.random() < 0.5 ? 3 : 4) }
-      ]);
-    }
-
-    function createLevelThreeOperation() {
-      return choose([
-        { weight: 72, create: () => multiplicationWithFigures(3, 3) },
-        { weight: 18, create: () => subtractionWithFigures(3, 3) },
-        { weight: 10, create: () => squareRootWithRadicandDigits(5) }
-      ]);
+      const minR = 10**(digits-1), maxR = 10**digits - 1;
+      const root = randomInt(Math.ceil(Math.sqrt(minR)), Math.floor(Math.sqrt(maxR)));
+      return { text: `√${root*root}`, result: root };
     }
 
     function createOperation() {
-      if (selectedLevel === 1) return createLevelOneOperation();
-      if (selectedLevel === 2) return createLevelTwoOperation();
-      return createLevelThreeOperation();
+      if (selectedLevel === 1) {
+        const flip = Math.random() < 0.5;
+        return choose([
+          { weight: 80, create: () => flip ? multiplicationWithFigures(1,2) : multiplicationWithFigures(2,1) },
+          { weight: 20, create: () => flip ? subtractionWithFigures(1,2)    : subtractionWithFigures(2,1)    }
+        ]);
+      }
+      if (selectedLevel === 2) return choose([
+        { weight: 72, create: () => multiplicationWithFigures(2,2) },
+        { weight: 18, create: () => subtractionWithFigures(2,2) },
+        { weight: 10, create: () => squareRootWithRadicandDigits(Math.random() < 0.5 ? 3 : 4) }
+      ]);
+      return choose([
+        { weight: 72, create: () => multiplicationWithFigures(3,3) },
+        { weight: 18, create: () => subtractionWithFigures(3,3) },
+        { weight: 10, create: () => squareRootWithRadicandDigits(5) }
+      ]);
     }
 
     function saveCurrentToHistory() {
       if (!current) return;
       history.push(current);
-      if (history.length > HISTORY_LIMIT) history = history.slice(history.length - HISTORY_LIMIT);
+      if (history.length > HISTORY_LIMIT) history = history.slice(-HISTORY_LIMIT);
     }
 
     function showNewOperation() {
@@ -802,7 +725,7 @@
     }
 
     function showPreviousOperation() {
-      if (history.length === 0) return;
+      if (!history.length) return;
       current = history.pop();
       operationEl.textContent = current.text;
       resultEl.textContent = current.result;
@@ -821,35 +744,33 @@
       showNewOperation();
     }
 
-    function toggleDarkMode() { document.body.classList.toggle("dark"); }
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark");
+      savePrefs();
+    }
 
-    // ─── Event helpers ───────────────────────────────────────────────────────────
-
-    function makeLongPress(onLongPress, ms = LONG_PRESS_MS) {
-      let timer = null;
-      let fired = false;
+    // ─── Long press factory ───────────────────────────────────────────────────────
+    function makeLongPress(onFire, ms = LONG_PRESS_MS) {
+      let timer = null, fired = false;
       return {
-        start() { fired = false; timer = setTimeout(() => { fired = true; onLongPress(); }, ms); },
-        cancel() { clearTimeout(timer); },
+        start()   { fired = false; timer = setTimeout(() => { fired = true; onFire(); }, ms); },
+        cancel()  { clearTimeout(timer); },
         didFire() { return fired; },
-        reset() { fired = false; }
+        reset()   { fired = false; }
       };
     }
 
-    // ─── Canvas long press (hide/show all controls) ───────────────────────────────
-
+    // ─── Canvas long press ────────────────────────────────────────────────────────
     const canvasPress = makeLongPress(toggleAllControls);
 
     document.body.addEventListener("pointerdown", event => {
       if (overlayEl.classList.contains("open")) return;
       if (infoOverlayEl.classList.contains("open")) return;
-      // Only fire on canvas, not on controls
       const isControl = [timerEl, styleControlEl, infoControlEl, operationEl].includes(event.target);
       if (isControl) return;
       canvasPress.start();
     });
-
-    document.body.addEventListener("pointerup", () => canvasPress.cancel());
+    document.body.addEventListener("pointerup",    () => canvasPress.cancel());
     document.body.addEventListener("pointerleave", () => canvasPress.cancel());
 
     document.body.addEventListener("click", event => {
@@ -858,115 +779,81 @@
       if (canvasPress.didFire()) { canvasPress.reset(); return; }
       const isControl = [timerEl, styleControlEl, infoControlEl, operationEl].includes(event.target);
       if (isControl) return;
-      if (event.clientX <= window.innerWidth * 0.25) {
-        showPreviousOperation();
-        return;
-      }
+      if (event.clientX <= window.innerWidth * 0.25) { showPreviousOperation(); return; }
       advancePractice();
     });
 
     // ─── Keyboard ────────────────────────────────────────────────────────────────
-
     document.addEventListener("keydown", event => {
       if (overlayEl.classList.contains("open")) return;
       if (infoOverlayEl.classList.contains("open")) return;
       if (event.key === "ArrowLeft") { event.preventDefault(); showPreviousOperation(); return; }
-      if (event.key === " " || event.key === "Enter" || event.key === "ArrowRight") {
-        event.preventDefault();
-        advancePractice();
-      }
+      if ([" ","Enter","ArrowRight"].includes(event.key)) { event.preventDefault(); advancePractice(); }
     });
 
-    // ─── Timer: tap → minutes picker, long press → hide ──────────────────────────
-
+    // ─── Timer control ────────────────────────────────────────────────────────────
     const timerPress = makeLongPress(() => { if (remainingSeconds > 0) hideTimer(); });
-
     timerEl.addEventListener("pointerdown", () => timerPress.start());
     timerEl.addEventListener("pointerup",   () => timerPress.cancel());
     timerEl.addEventListener("pointerleave",() => timerPress.cancel());
-
     timerEl.addEventListener("click", event => {
       event.stopPropagation();
       if (timerPress.didFire()) { timerPress.reset(); return; }
       if (remainingSeconds === 0) return;
       openMinutePicker();
     });
+    timerGhostEl.addEventListener("click", event => { event.stopPropagation(); if (timerIsHidden) showTimer(); });
 
-    // Ghost zone: tap anywhere in timer corner → show timer
-    timerGhostEl.addEventListener("click", event => {
-      event.stopPropagation();
-      if (timerIsHidden) showTimer();
-    });
-
-    // ─── Settings: tap → settings picker, long press → hide ──────────────────────
-
+    // ─── Settings control ─────────────────────────────────────────────────────────
     const settingsPress = makeLongPress(hideSettings);
-
     styleControlEl.addEventListener("pointerdown", () => settingsPress.start());
     styleControlEl.addEventListener("pointerup",   () => settingsPress.cancel());
     styleControlEl.addEventListener("pointerleave",() => settingsPress.cancel());
-
     styleControlEl.addEventListener("click", event => {
       event.stopPropagation();
       if (settingsPress.didFire()) { settingsPress.reset(); return; }
       openSettings();
     });
+    settingsGhostEl.addEventListener("click", event => { event.stopPropagation(); if (styleControlIsHidden) showSettings(); });
 
-    settingsGhostEl.addEventListener("click", event => {
-      event.stopPropagation();
-      if (styleControlIsHidden) showSettings();
-    });
-
-    // ─── Info: tap → info overlay, long press → hide ─────────────────────────────
-
+    // ─── Info control ─────────────────────────────────────────────────────────────
     const infoPress = makeLongPress(hideInfo);
-
     infoControlEl.addEventListener("pointerdown", () => infoPress.start());
     infoControlEl.addEventListener("pointerup",   () => infoPress.cancel());
     infoControlEl.addEventListener("pointerleave",() => infoPress.cancel());
-
     infoControlEl.addEventListener("click", event => {
       event.stopPropagation();
       if (infoPress.didFire()) { infoPress.reset(); return; }
       infoOverlayEl.classList.add("open");
     });
+    infoGhostEl.addEventListener("click", event => { event.stopPropagation(); if (infoControlIsHidden) showInfo(); });
 
-    infoGhostEl.addEventListener("click", event => {
-      event.stopPropagation();
-      if (infoControlIsHidden) showInfo();
-    });
-
-    // ─── Operation: tap → dark mode. Long press → placeholder (disabled) ─────────
-
+    // ─── Operation: tap → dark mode · long press → placeholder ───────────────────
     operationEl.addEventListener("click", event => {
       event.stopPropagation();
-      // Long press on operation intentionally disabled — placeholder for future use
       toggleDarkMode();
     });
-
     operationEl.addEventListener("pointerdown", () => {
-      // PLACEHOLDER: long press on operation (currently disabled)
-      // operationLongPress = setTimeout(() => { /* future use */ }, LONG_PRESS_MS);
+      // PLACEHOLDER: long press on operation disabled — reserved for future use
+      // operationLongPress = setTimeout(() => { /* future */ }, LONG_PRESS_MS);
     });
     operationEl.addEventListener("pointerup",    () => { /* placeholder */ });
     operationEl.addEventListener("pointerleave", () => { /* placeholder */ });
 
     // ─── Overlay close ────────────────────────────────────────────────────────────
-
-    overlayEl.addEventListener("click", event => { if (event.target === overlayEl) closePicker(); });
+    overlayEl.addEventListener("click",     event => { if (event.target === overlayEl)     closePicker(); });
     infoOverlayEl.addEventListener("click", event => { if (event.target === infoOverlayEl) infoOverlayEl.classList.remove("open"); });
 
     // ─── Service worker ───────────────────────────────────────────────────────────
-
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js"));
     }
 
     // ─── Init ────────────────────────────────────────────────────────────────────
-
+    loadPrefs();
     applyStylePreferences();
     showNewOperation();
-    startTimer();
+    startTimer(selectedMinutes * 60);
   </script>
 </body>
 </html>
