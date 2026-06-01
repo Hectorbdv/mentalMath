@@ -277,16 +277,6 @@
   <div id="settingsGhost" class="ghost-zone settings-ghost" hidden></div>
   <div id="infoGhost"     class="ghost-zone info-ghost"     hidden></div>
 
-  <!-- SVG displacement filter for wave/refraction effect -->
-  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;">
-    <defs>
-      <filter id="refract" x="-25%" y="-25%" width="150%" height="150%">
-        <feTurbulence id="waveTurbulence" type="fractalNoise" baseFrequency="0.013 0.008" numOctaves="3" seed="5" result="noise"/>
-        <feDisplacementMap id="waveDisplace" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G"/>
-      </filter>
-    </defs>
-  </svg>
-
   <div class="page">
     <main class="practice">
       <div id="operation" class="operation"></div>
@@ -393,9 +383,6 @@
     const timerGhostEl     = document.querySelector("#timerGhost");
     const settingsGhostEl  = document.querySelector("#settingsGhost");
     const infoGhostEl      = document.querySelector("#infoGhost");
-    const pageEl           = document.querySelector(".page");
-    const waveTurbEl       = document.querySelector("#waveTurbulence");
-    const waveDisplaceEl   = document.querySelector("#waveDisplace");
 
     // ─── Persistence ─────────────────────────────────────────────────────────────
     function savePrefs() {
@@ -421,53 +408,6 @@
         if (p.minutes != null && p.minutes >= MINUTES_MIN && p.minutes <= MINUTES_MAX) selectedMinutes = p.minutes;
         if (p.dark) document.body.classList.add("dark");
       } catch (_) {}
-    }
-
-    // ─── Wave effect ─────────────────────────────────────────────────────────────
-    let waveAnimFrame = null;
-    let waveActive    = false;
-
-    function triggerWave() {
-      if (waveActive) return;
-      waveActive = true;
-      pageEl.style.filter = "url(#refract)";
-
-      let startTime = null;
-      const DURATION  = 5400;
-      const MAX_SCALE = 16;
-
-      function step(ts) {
-        if (!startTime) startTime = ts;
-        const t = Math.min((ts - startTime) / DURATION, 1);
-
-        // Envelope: slow rise → hold → slow fade
-        let env;
-        if      (t < 0.15) env = t / 0.15;
-        else if (t < 0.70) env = 1;
-        else               env = 1 - (t - 0.70) / 0.30;
-
-        if (waveDisplaceEl) waveDisplaceEl.setAttribute("scale", String(env * MAX_SCALE));
-        if (waveTurbEl) {
-          const f = 0.013 + env * 0.005;
-          waveTurbEl.setAttribute("baseFrequency", `${f.toFixed(4)} ${(f * 0.6).toFixed(4)}`);
-        }
-
-        if (t < 1) {
-          waveAnimFrame = requestAnimationFrame(step);
-        } else {
-          pageEl.style.filter = "";
-          waveActive = false;
-          waveAnimFrame = null;
-        }
-      }
-
-      waveAnimFrame = requestAnimationFrame(step);
-    }
-
-    function cancelWave() {
-      if (waveAnimFrame) { cancelAnimationFrame(waveAnimFrame); waveAnimFrame = null; }
-      pageEl.style.filter = "";
-      waveActive = false;
     }
 
     // ─── Utilities ───────────────────────────────────────────────────────────────
@@ -505,12 +445,10 @@
         timerIsHidden = false;
         timerEl.classList.remove("hidden");
         timerGhostEl.hidden = true;
-        triggerWave();
       }
     }
 
     function startTimer(seconds) {
-      cancelWave();
       clearInterval(timerInterval);
       remainingSeconds = seconds != null ? seconds : selectedMinutes * 60;
       renderTimer();
@@ -540,7 +478,7 @@
         if (!styleControlIsHidden)  hideSettings();
         if (!infoControlIsHidden)   hideInfo();
       } else {
-        if (remainingSeconds > 0) showTimer();
+        showTimer();
         showSettings();
         showInfo();
       }
@@ -799,7 +737,6 @@
     timerEl.addEventListener("click", event => {
       event.stopPropagation();
       if (timerPress.didFire()) { timerPress.reset(); return; }
-      if (remainingSeconds === 0) return;
       openMinutePicker();
     });
     timerGhostEl.addEventListener("click", event => { event.stopPropagation(); if (timerIsHidden) showTimer(); });
