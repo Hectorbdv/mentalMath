@@ -16,24 +16,24 @@
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   
-  <meta name="theme-color" content="#f4f1ea">
+  <meta name="theme-color" content="#edf2f1">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="dailyMath">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
   <style>
     :root {
-      --bg: #f4f1ea;
+      --bg: #edf2f1;
       --dark-bg: #11100e;
       --ink: #151515;
-      --dark-ink: #f4f1ea;
-      --muted: #8a857c;
+      --dark-ink: #edf2f1;
+      --muted: #758987;
       --dark-muted: #8e887d;
-      --panel: rgba(244, 241, 234, 0.82);
+      --panel: rgba(237, 242, 241, 0.82);
       --dark-panel: rgba(17, 16, 14, 0.84);
       --line: rgba(21, 21, 21, 0.14);
       --dark-line: rgba(244, 241, 234, 0.16);
-      --font-main: "Libre Franklin", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      --font-main: "Roboto", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
     }
 
     body.dark {
@@ -93,7 +93,35 @@
       transition: opacity 320ms ease, color 520ms ease;
     }
 
-    .control.hidden { opacity: 0; }
+    .control.hidden { opacity: 0; pointer-events: none; }
+
+    /* Ghost tap zones — invisible, only active when control is hidden */
+    .ghost-zone {
+      position: fixed;
+      z-index: 19;
+      /* sized to roughly match each control's tap region */
+    }
+
+    .ghost-zone.timer-ghost {
+      top: max(14px, env(safe-area-inset-top));
+      right: max(16px, env(safe-area-inset-right));
+      width: 80px;
+      height: 44px;
+    }
+
+    .ghost-zone.settings-ghost {
+      top: max(14px, env(safe-area-inset-top));
+      left: max(16px, env(safe-area-inset-left));
+      width: 44px;
+      height: 44px;
+    }
+
+    .ghost-zone.info-ghost {
+      bottom: max(14px, env(safe-area-inset-bottom));
+      left: max(16px, env(safe-area-inset-left));
+      width: 44px;
+      height: 44px;
+    }
 
     .timer {
       top: max(22px, env(safe-area-inset-top));
@@ -113,11 +141,6 @@
       padding-right: 18px;
       font-size: 13px;
       text-transform: lowercase;
-    }
-
-    .info-control.hidden {
-      opacity: 0;
-      pointer-events: none;
     }
 
     .practice {
@@ -185,11 +208,10 @@
       pointer-events: auto;
     }
 
-    .wheel-wrap { text-align: center; }
-
-    .dual-wheel-wrap {
+    /* Triple wheel layout for settings: font + color + level */
+    .triple-wheel-wrap {
       display: grid;
-      grid-template-columns: 138px 138px;
+      grid-template-columns: 138px 138px 100px;
       gap: 22px;
       align-items: start;
       text-align: center;
@@ -209,7 +231,10 @@
       mask-image: linear-gradient(to bottom, transparent 0%, black 26%, black 74%, transparent 100%);
     }
 
-    .dual-wheel-wrap .wheel { margin: 0 auto; }
+    .triple-wheel-wrap .wheel { margin: 0 auto; }
+
+    /* Level wheel narrower */
+    .level-wheel-col .wheel { width: 86px; }
 
     .wheel::before,
     .wheel::after {
@@ -229,6 +254,18 @@
       color: var(--ink);
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
+      transition: font-weight 180ms ease, opacity 180ms ease;
+    }
+
+    /* Selected item highlight — bold and full opacity */
+    .wheel-option.is-selected {
+      font-weight: 500;
+      opacity: 1;
+    }
+
+    /* Non-selected items slightly dimmed */
+    .wheel-option:not(.is-selected) {
+      opacity: 0.38;
     }
 
     .style-wheel .wheel-option {
@@ -236,20 +273,21 @@
       letter-spacing: -0.035em;
     }
 
-    .color-swatch {
-      width: 38px;
-      height: 38px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
+    .level-wheel .wheel-option {
+      font-size: 28px;
     }
 
-    .picker-caption {
-      margin-top: 20px;
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: 0.28em;
-      text-transform: uppercase;
-      color: var(--muted);
+    .color-swatch {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 1.5px solid var(--line);
+      transition: transform 180ms ease;
+    }
+
+    .wheel-option.is-selected .color-swatch {
+      transform: scale(1.18);
+      border-width: 2px;
     }
 
     .mini-caption {
@@ -314,21 +352,27 @@
 
       .result { margin-top: 28px; }
 
-      .dual-wheel-wrap {
-        grid-template-columns: 132px 132px;
-        gap: 12px;
+      .triple-wheel-wrap {
+        grid-template-columns: 118px 118px 86px;
+        gap: 10px;
       }
 
-      .wheel { width: 118px; }
+      .triple-wheel-wrap .wheel { width: 104px; }
+      .level-wheel-col .wheel { width: 76px; }
       .style-wheel .wheel-option { font-size: 16px; }
     }
   </style>
 </head>
 
 <body>
-  <div id="styleControl" class="control style-control">f/c</div>
+  <div id="styleControl" class="control style-control">s</div>
   <div id="timer" class="control timer">12:00</div>
   <div id="infoControl" class="control info-control">i</div>
+
+  <!-- Ghost tap zones, only active when corresponding control is hidden -->
+  <div id="timerGhost" class="ghost-zone timer-ghost" hidden></div>
+  <div id="settingsGhost" class="ghost-zone settings-ghost" hidden></div>
+  <div id="infoGhost" class="ghost-zone info-ghost" hidden></div>
 
   <div class="page">
     <main class="practice">
@@ -337,13 +381,9 @@
     </main>
   </div>
 
+  <!-- Settings overlay: font + color + level in one triple wheel -->
   <div id="overlay" class="overlay">
-    <div id="singleWheelWrap" class="wheel-wrap">
-      <div id="wheel" class="wheel"></div>
-      <div id="pickerCaption" class="picker-caption"></div>
-    </div>
-
-    <div id="dualWheelWrap" class="dual-wheel-wrap" hidden>
+    <div id="tripleWheelWrap" class="triple-wheel-wrap">
       <div>
         <div id="fontWheel" class="wheel style-wheel"></div>
         <div class="mini-caption">font</div>
@@ -352,6 +392,10 @@
         <div id="colorWheel" class="wheel"></div>
         <div class="mini-caption">color</div>
       </div>
+      <div class="level-wheel-col">
+        <div id="levelWheel" class="wheel level-wheel"></div>
+        <div class="mini-caption">level</div>
+      </div>
     </div>
   </div>
 
@@ -359,14 +403,14 @@
     <section class="info-card">
       <p class="info-title">dailyMath</p>
       <ul class="info-list">
-        <li><strong>Add app:</strong> Safari → <span class="share-icon">□↑</span> → Add to Home Screen.</li>
-        <li><strong>Tap:</strong> show answer. Tap again: next operation.</li>
-        <li><strong>Left edge:</strong> previous operation.</li>
-        <li><strong>Numbers:</strong> tap for dark mode. Long press for level.</li>
-        <li><strong>Timer:</strong> tap hide/show. Long press for minutes.</li>
-        <li><strong>f/c:</strong> tap hide/show. Long press for font and color.</li>
-        <li><strong>Keyboard:</strong> Space, Enter, → next. ← previous.</li>
-        <li><strong>i:</strong> tap help. Long press to hide the icon.</li>
+        <li><strong>tap</strong> — reveal answer, then next</li>
+        <li><strong>left edge</strong> — previous</li>
+        <li><strong>numbers</strong> — dark mode</li>
+        <li><strong>timer</strong> — set duration · long press hides</li>
+        <li><strong>s</strong> — font, color, level · long press hides</li>
+        <li><strong>i</strong> — this · long press hides</li>
+        <li><strong>long press canvas</strong> — toggle all controls</li>
+        <li><strong>install</strong> — Safari <span class="share-icon">□↑</span> Add to Home Screen</li>
       </ul>
     </section>
   </div>
@@ -379,12 +423,12 @@
     const infoControlEl = document.querySelector("#infoControl");
     const overlayEl = document.querySelector("#overlay");
     const infoOverlayEl = document.querySelector("#infoOverlay");
-    const singleWheelWrapEl = document.querySelector("#singleWheelWrap");
-    const dualWheelWrapEl = document.querySelector("#dualWheelWrap");
-    const wheelEl = document.querySelector("#wheel");
     const fontWheelEl = document.querySelector("#fontWheel");
     const colorWheelEl = document.querySelector("#colorWheel");
-    const pickerCaptionEl = document.querySelector("#pickerCaption");
+    const levelWheelEl = document.querySelector("#levelWheel");
+    const timerGhostEl = document.querySelector("#timerGhost");
+    const settingsGhostEl = document.querySelector("#settingsGhost");
+    const infoGhostEl = document.querySelector("#infoGhost");
 
     const DEFAULT_MINUTES = 12;
     const MINUTES_MIN = 1;
@@ -399,42 +443,41 @@
     const FONT_OPTIONS = [
       { label: "Libre", family: "\"Libre Franklin\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" },
       { label: "Inter", family: "\"Inter\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" },
-      { label: "Work", family: "\"Work Sans\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" },
-      { label: "Plex", family: "\"IBM Plex Sans\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" },
-      { label: "Source", family: "\"Source Sans 3\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" },
-      { label: "Roboto", family: "\"Roboto\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" }
+      { label: "Roboto",family: "\"Roboto\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" },
+      { label: "Plex",  family: "\"IBM Plex Sans\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" },
+      { label: "Source",family: "\"Source Sans 3\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif" }
     ];
 
+    // 5 distinct subtle pastel-neutral colors — seafoam is default (index 2, center)
     const COLOR_OPTIONS = [
-      { bg: "#f4f1ea", muted: "#8a857c" },
-      { bg: "#edf1ec", muted: "#7f897d" },
-      { bg: "#eef0f4", muted: "#7f8490" },
-      { bg: "#f3eeee", muted: "#8f8181" },
-      { bg: "#f2efe6", muted: "#8c846f" },
-      { bg: "#edf2f1", muted: "#758987" }
+      { bg: "#edf1ec", ink: "#151515", muted: "#7f897d" },  // sage mist
+      { bg: "#eef0f4", ink: "#151515", muted: "#7f8490" },  // cool slate
+      { bg: "#edf2f1", ink: "#151515", muted: "#758987" },  // seafoam (default)
+      { bg: "#f3eeee", ink: "#151515", muted: "#8f8181" },  // blush
+      { bg: "#f2efe6", ink: "#151515", muted: "#8c846f" }   // linen
     ];
 
     let selectedMinutes = DEFAULT_MINUTES;
     let selectedLevel = DEFAULT_LEVEL;
-    let selectedFontIndex = 0;
-    let selectedColorIndex = 0;
+    let selectedFontIndex = 2;
+    let selectedColorIndex = 2;
     let remainingSeconds = selectedMinutes * 60;
     let current = null;
     let history = [];
     let showingResult = false;
     let timerInterval = null;
+
     let timerIsHidden = false;
     let styleControlIsHidden = false;
     let infoControlIsHidden = false;
-    let pickerMode = null;
-    let timerLongPress = null;
-    let operationLongPress = null;
-    let styleLongPress = null;
-    let infoLongPress = null;
-    let timerLongPressTriggered = false;
-    let operationLongPressTriggered = false;
-    let styleLongPressTriggered = false;
-    let infoLongPressTriggered = false;
+
+    // Long press state per element
+    let timerLP = null, timerLPFired = false;
+    let settingsLP = null, settingsLPFired = false;
+    let infoLP = null, infoLPFired = false;
+    let canvasLP = null, canvasLPFired = false;
+
+    // ─── Utilities ──────────────────────────────────────────────────────────────
 
     function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
@@ -473,11 +516,14 @@
       return `${minutes}:${String(seconds).padStart(2, "0")}`;
     }
 
+    // ─── Timer ──────────────────────────────────────────────────────────────────
+
     function renderTimer() {
       timerEl.textContent = formatTime(remainingSeconds);
       if (remainingSeconds === 0) {
         timerIsHidden = false;
         timerEl.classList.remove("hidden");
+        timerGhostEl.hidden = true;
       }
     }
 
@@ -493,113 +539,198 @@
       }, 1000);
     }
 
-    function toggleTimerVisibility() {
-      if (remainingSeconds === 0) return;
-      timerIsHidden = !timerIsHidden;
-      timerEl.classList.toggle("hidden", timerIsHidden);
+    // ─── Control visibility ──────────────────────────────────────────────────────
+
+    function setControlVisible(el, ghostEl, visible) {
+      el.classList.toggle("hidden", !visible);
+      ghostEl.hidden = visible; // ghost only active when control is hidden
     }
 
-    function toggleStyleControlVisibility() {
-      styleControlIsHidden = !styleControlIsHidden;
-      styleControlEl.classList.toggle("hidden", styleControlIsHidden);
+    function hideControl(el, ghostEl) { setControlVisible(el, ghostEl, false); }
+    function showControl(el, ghostEl) { setControlVisible(el, ghostEl, true); }
+
+    function hideTimer()    { timerIsHidden = true;         hideControl(timerEl, timerGhostEl); }
+    function showTimer()    { timerIsHidden = false;        showControl(timerEl, timerGhostEl); }
+    function hideSettings() { styleControlIsHidden = true;  hideControl(styleControlEl, settingsGhostEl); }
+    function showSettings() { styleControlIsHidden = false; showControl(styleControlEl, settingsGhostEl); }
+    function hideInfo()     { infoControlIsHidden = true;   hideControl(infoControlEl, infoGhostEl); }
+    function showInfo()     { infoControlIsHidden = false;  showControl(infoControlEl, infoGhostEl); }
+
+    function anyVisible() { return !timerIsHidden || !styleControlIsHidden || !infoControlIsHidden; }
+
+    function toggleAllControls() {
+      if (anyVisible()) {
+        if (!timerIsHidden) hideTimer();
+        if (!styleControlIsHidden) hideSettings();
+        if (!infoControlIsHidden) hideInfo();
+      } else {
+        if (remainingSeconds > 0) showTimer();
+        showSettings();
+        showInfo();
+      }
     }
 
-    function toggleInfoControlVisibility() {
-      infoControlIsHidden = !infoControlIsHidden;
-      infoControlEl.classList.toggle("hidden", infoControlIsHidden);
-    }
+    // ─── Wheel helpers ───────────────────────────────────────────────────────────
 
-    function buildWheel(targetEl, min, max, formatter) {
+    function buildWheel(targetEl, count, renderer) {
       targetEl.innerHTML = "";
-      for (let value = min; value <= max; value += 1) {
+      for (let i = 0; i < count; i++) {
         const option = document.createElement("div");
         option.className = "wheel-option";
-        option.dataset.value = String(value);
-        const rendered = formatter(value);
+        option.dataset.index = String(i);
+        const rendered = renderer(i);
         if (rendered instanceof HTMLElement) option.appendChild(rendered);
         else option.textContent = rendered;
         targetEl.appendChild(option);
       }
     }
 
-    function scrollWheelTo(targetEl, value, min) { targetEl.scrollTop = (value - min) * OPTION_HEIGHT; }
+    function scrollWheelTo(targetEl, index) {
+      targetEl.scrollTop = index * OPTION_HEIGHT;
+    }
 
-    function getWheelValue(targetEl, min, max) {
+    function getWheelIndex(targetEl, count) {
       const index = Math.round(targetEl.scrollTop / OPTION_HEIGHT);
-      return Math.min(max, Math.max(min, index + min));
+      return Math.min(count - 1, Math.max(0, index));
     }
 
-    function openMinutePicker() {
-      pickerMode = "minutes";
-      singleWheelWrapEl.hidden = false;
-      dualWheelWrapEl.hidden = true;
-      pickerCaptionEl.textContent = "minutes";
-      buildWheel(wheelEl, MINUTES_MIN, MINUTES_MAX, value => String(value));
-      overlayEl.classList.add("open");
-      timerIsHidden = false;
-      timerEl.classList.remove("hidden");
-      requestAnimationFrame(() => scrollWheelTo(wheelEl, selectedMinutes, MINUTES_MIN));
+    // Update selected styling as user scrolls
+    function updateWheelSelection(targetEl, count) {
+      const current = getWheelIndex(targetEl, count);
+      targetEl.querySelectorAll(".wheel-option").forEach((el, i) => {
+        el.classList.toggle("is-selected", i === current);
+      });
     }
 
-    function openLevelPicker() {
-      pickerMode = "level";
-      singleWheelWrapEl.hidden = false;
-      dualWheelWrapEl.hidden = true;
-      pickerCaptionEl.textContent = "level";
-      buildWheel(wheelEl, LEVEL_MIN, LEVEL_MAX, value => String(value));
-      overlayEl.classList.add("open");
-      requestAnimationFrame(() => scrollWheelTo(wheelEl, selectedLevel, LEVEL_MIN));
+    function attachScrollHighlight(targetEl, count) {
+      targetEl.addEventListener("scroll", () => updateWheelSelection(targetEl, count), { passive: true });
     }
 
-    function openStylePicker() {
-      pickerMode = "style";
-      singleWheelWrapEl.hidden = true;
-      dualWheelWrapEl.hidden = false;
-      buildWheel(fontWheelEl, 0, FONT_OPTIONS.length - 1, index => FONT_OPTIONS[index].label);
-      buildWheel(colorWheelEl, 0, COLOR_OPTIONS.length - 1, index => {
+    // ─── Settings picker (font + color + level combined) ─────────────────────────
+
+    function openSettingsPicker() {
+      buildWheel(fontWheelEl, FONT_OPTIONS.length, i => FONT_OPTIONS[i].label);
+      buildWheel(colorWheelEl, COLOR_OPTIONS.length, i => {
         const swatch = document.createElement("span");
         swatch.className = "color-swatch";
-        swatch.style.background = COLOR_OPTIONS[index].bg;
+        swatch.style.background = COLOR_OPTIONS[i].bg;
         return swatch;
       });
+      buildWheel(levelWheelEl, LEVEL_MAX - LEVEL_MIN + 1, i => String(i + LEVEL_MIN));
+
+      attachScrollHighlight(fontWheelEl, FONT_OPTIONS.length);
+      attachScrollHighlight(colorWheelEl, COLOR_OPTIONS.length);
+      attachScrollHighlight(levelWheelEl, LEVEL_MAX - LEVEL_MIN + 1);
+
       overlayEl.classList.add("open");
       styleControlIsHidden = false;
       styleControlEl.classList.remove("hidden");
+
       requestAnimationFrame(() => {
-        scrollWheelTo(fontWheelEl, selectedFontIndex, 0);
-        scrollWheelTo(colorWheelEl, selectedColorIndex, 0);
+        scrollWheelTo(fontWheelEl, selectedFontIndex);
+        scrollWheelTo(colorWheelEl, selectedColorIndex);
+        scrollWheelTo(levelWheelEl, selectedLevel - LEVEL_MIN);
+        updateWheelSelection(fontWheelEl, FONT_OPTIONS.length);
+        updateWheelSelection(colorWheelEl, COLOR_OPTIONS.length);
+        updateWheelSelection(levelWheelEl, LEVEL_MAX - LEVEL_MIN + 1);
       });
+    }
+
+    // ─── Minutes picker (timer long-press → now just tap) ────────────────────────
+    // Reuses overlay with a single wheel column for minutes.
+    // We keep this separate because the settings overlay is triple-wheel.
+    // For simplicity we open the settings overlay in "minutes mode" using a hidden flag.
+
+    let pickerMode = null; // "settings" | "minutes"
+
+    const singleWheelWrapEl = (() => {
+      // Create a single-wheel wrapper dynamically and append to overlay
+      const wrap = document.createElement("div");
+      wrap.id = "singleWheelWrap";
+      wrap.style.cssText = "text-align:center; display:none;";
+      wrap.innerHTML = `<div id="minuteWheel" class="wheel"></div><div class="mini-caption">minutes</div>`;
+      wrap.hidden = true;
+      overlayEl.appendChild(wrap);
+      return wrap;
+    })();
+    const minuteWheelEl = document.querySelector("#minuteWheel");
+    const tripleWheelWrapEl = document.querySelector("#tripleWheelWrap");
+
+    function openMinutePicker() {
+      pickerMode = "minutes";
+      // Hide settings wheels, show only minute wheel
+      tripleWheelWrapEl.hidden = true;
+      tripleWheelWrapEl.style.display = "none";
+      singleWheelWrapEl.hidden = false;
+      singleWheelWrapEl.style.display = "";
+      buildWheel(minuteWheelEl, MINUTES_MAX - MINUTES_MIN + 1, i => String(i + MINUTES_MIN));
+      attachScrollHighlight(minuteWheelEl, MINUTES_MAX - MINUTES_MIN + 1);
+      overlayEl.classList.add("open");
+      timerIsHidden = false;
+      timerEl.classList.remove("hidden");
+      timerGhostEl.hidden = true;
+      requestAnimationFrame(() => {
+        scrollWheelTo(minuteWheelEl, selectedMinutes - MINUTES_MIN);
+        updateWheelSelection(minuteWheelEl, MINUTES_MAX - MINUTES_MIN + 1);
+      });
+    }
+
+    function openSettings() {
+      pickerMode = "settings";
+      tripleWheelWrapEl.hidden = false;
+      tripleWheelWrapEl.style.display = "";
+      singleWheelWrapEl.hidden = true;
+      singleWheelWrapEl.style.display = "none";
+      openSettingsPicker();
     }
 
     function applyStylePreferences() {
       const font = FONT_OPTIONS[selectedFontIndex];
       const color = COLOR_OPTIONS[selectedColorIndex];
+      // Apply font to the whole document
       document.documentElement.style.setProperty("--font-main", font.family);
+      document.body.style.fontFamily = font.family;
+      // Apply color palette
       document.documentElement.style.setProperty("--bg", color.bg);
       document.documentElement.style.setProperty("--dark-ink", color.bg);
       document.documentElement.style.setProperty("--muted", color.muted);
+      // Also update dark-bg-based dark-ink for dark mode consistency
       const themeMeta = document.querySelector("meta[name='theme-color']");
       if (themeMeta) themeMeta.setAttribute("content", color.bg);
     }
 
     function closePicker() {
       if (!overlayEl.classList.contains("open")) return;
+
       if (pickerMode === "minutes") {
-        selectedMinutes = getWheelValue(wheelEl, MINUTES_MIN, MINUTES_MAX);
+        selectedMinutes = getWheelIndex(minuteWheelEl, MINUTES_MAX - MINUTES_MIN + 1) + MINUTES_MIN;
         startTimer(selectedMinutes * 60);
       }
-      if (pickerMode === "level") {
-        selectedLevel = getWheelValue(wheelEl, LEVEL_MIN, LEVEL_MAX);
-        showNewOperation();
-      }
-      if (pickerMode === "style") {
-        selectedFontIndex = getWheelValue(fontWheelEl, 0, FONT_OPTIONS.length - 1);
-        selectedColorIndex = getWheelValue(colorWheelEl, 0, COLOR_OPTIONS.length - 1);
+
+      if (pickerMode === "settings") {
+        const newFontIndex = getWheelIndex(fontWheelEl, FONT_OPTIONS.length);
+        const newColorIndex = getWheelIndex(colorWheelEl, COLOR_OPTIONS.length);
+        const newLevel = getWheelIndex(levelWheelEl, LEVEL_MAX - LEVEL_MIN + 1) + LEVEL_MIN;
+
+        const levelChanged = newLevel !== selectedLevel;
+        selectedFontIndex = newFontIndex;
+        selectedColorIndex = newColorIndex;
+        selectedLevel = newLevel;
+
         applyStylePreferences();
+        if (levelChanged) showNewOperation();
       }
+
       pickerMode = null;
       overlayEl.classList.remove("open");
+      // Restore triple wheel for next open, hide single
+      tripleWheelWrapEl.hidden = false;
+      tripleWheelWrapEl.style.display = "";
+      singleWheelWrapEl.hidden = true;
+      singleWheelWrapEl.style.display = "none";
     }
+
+    // ─── Operations ──────────────────────────────────────────────────────────────
 
     function multiplicationWithFigures(figuresA, figuresB) {
       const a = numberWithFigures(figuresA, true);
@@ -686,23 +817,47 @@
     }
 
     function advancePractice() {
-      if (!showingResult) {
-        showResult();
-        return;
-      }
+      if (!showingResult) { showResult(); return; }
       showNewOperation();
     }
 
     function toggleDarkMode() { document.body.classList.toggle("dark"); }
 
-    function isControlTarget(target) {
-      return target === timerEl || target === operationEl || target === styleControlEl || target === infoControlEl;
+    // ─── Event helpers ───────────────────────────────────────────────────────────
+
+    function makeLongPress(onLongPress, ms = LONG_PRESS_MS) {
+      let timer = null;
+      let fired = false;
+      return {
+        start() { fired = false; timer = setTimeout(() => { fired = true; onLongPress(); }, ms); },
+        cancel() { clearTimeout(timer); },
+        didFire() { return fired; },
+        reset() { fired = false; }
+      };
     }
+
+    // ─── Canvas long press (hide/show all controls) ───────────────────────────────
+
+    const canvasPress = makeLongPress(toggleAllControls);
+
+    document.body.addEventListener("pointerdown", event => {
+      if (overlayEl.classList.contains("open")) return;
+      if (infoOverlayEl.classList.contains("open")) return;
+      // Only fire on canvas, not on controls
+      const isControl = [timerEl, styleControlEl, infoControlEl, operationEl].includes(event.target);
+      if (isControl) return;
+      canvasPress.start();
+    });
+
+    document.body.addEventListener("pointerup", () => canvasPress.cancel());
+    document.body.addEventListener("pointerleave", () => canvasPress.cancel());
 
     document.body.addEventListener("click", event => {
       if (overlayEl.classList.contains("open")) return;
       if (infoOverlayEl.classList.contains("open")) return;
-      if (isControlTarget(event.target)) return;
+      if (canvasPress.didFire()) { canvasPress.reset(); return; }
+      const isControl = [timerEl, styleControlEl, infoControlEl, operationEl].includes(event.target);
+      if (isControl) return;
       if (event.clientX <= window.innerWidth * 0.25) {
         showPreviousOperation();
         return;
@@ -710,78 +865,104 @@
       advancePractice();
     });
 
+    // ─── Keyboard ────────────────────────────────────────────────────────────────
+
     document.addEventListener("keydown", event => {
       if (overlayEl.classList.contains("open")) return;
       if (infoOverlayEl.classList.contains("open")) return;
-      if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        showPreviousOperation();
-        return;
-      }
+      if (event.key === "ArrowLeft") { event.preventDefault(); showPreviousOperation(); return; }
       if (event.key === " " || event.key === "Enter" || event.key === "ArrowRight") {
         event.preventDefault();
         advancePractice();
       }
     });
 
+    // ─── Timer: tap → minutes picker, long press → hide ──────────────────────────
+
+    const timerPress = makeLongPress(() => { if (remainingSeconds > 0) hideTimer(); });
+
+    timerEl.addEventListener("pointerdown", () => timerPress.start());
+    timerEl.addEventListener("pointerup",   () => timerPress.cancel());
+    timerEl.addEventListener("pointerleave",() => timerPress.cancel());
+
     timerEl.addEventListener("click", event => {
       event.stopPropagation();
-      if (!timerLongPressTriggered) toggleTimerVisibility();
-      timerLongPressTriggered = false;
+      if (timerPress.didFire()) { timerPress.reset(); return; }
+      if (remainingSeconds === 0) return;
+      openMinutePicker();
     });
 
-    timerEl.addEventListener("pointerdown", () => {
-      timerLongPressTriggered = false;
-      timerLongPress = setTimeout(() => { timerLongPressTriggered = true; openMinutePicker(); }, LONG_PRESS_MS);
+    // Ghost zone: tap anywhere in timer corner → show timer
+    timerGhostEl.addEventListener("click", event => {
+      event.stopPropagation();
+      if (timerIsHidden) showTimer();
     });
-    timerEl.addEventListener("pointerup", () => clearTimeout(timerLongPress));
-    timerEl.addEventListener("pointerleave", () => clearTimeout(timerLongPress));
+
+    // ─── Settings: tap → settings picker, long press → hide ──────────────────────
+
+    const settingsPress = makeLongPress(hideSettings);
+
+    styleControlEl.addEventListener("pointerdown", () => settingsPress.start());
+    styleControlEl.addEventListener("pointerup",   () => settingsPress.cancel());
+    styleControlEl.addEventListener("pointerleave",() => settingsPress.cancel());
 
     styleControlEl.addEventListener("click", event => {
       event.stopPropagation();
-      if (!styleLongPressTriggered) toggleStyleControlVisibility();
-      styleLongPressTriggered = false;
+      if (settingsPress.didFire()) { settingsPress.reset(); return; }
+      openSettings();
     });
 
-    styleControlEl.addEventListener("pointerdown", () => {
-      styleLongPressTriggered = false;
-      styleLongPress = setTimeout(() => { styleLongPressTriggered = true; openStylePicker(); }, LONG_PRESS_MS);
+    settingsGhostEl.addEventListener("click", event => {
+      event.stopPropagation();
+      if (styleControlIsHidden) showSettings();
     });
-    styleControlEl.addEventListener("pointerup", () => clearTimeout(styleLongPress));
-    styleControlEl.addEventListener("pointerleave", () => clearTimeout(styleLongPress));
+
+    // ─── Info: tap → info overlay, long press → hide ─────────────────────────────
+
+    const infoPress = makeLongPress(hideInfo);
+
+    infoControlEl.addEventListener("pointerdown", () => infoPress.start());
+    infoControlEl.addEventListener("pointerup",   () => infoPress.cancel());
+    infoControlEl.addEventListener("pointerleave",() => infoPress.cancel());
 
     infoControlEl.addEventListener("click", event => {
       event.stopPropagation();
-      if (!infoLongPressTriggered) infoOverlayEl.classList.add("open");
-      infoLongPressTriggered = false;
+      if (infoPress.didFire()) { infoPress.reset(); return; }
+      infoOverlayEl.classList.add("open");
     });
 
-    infoControlEl.addEventListener("pointerdown", () => {
-      infoLongPressTriggered = false;
-      infoLongPress = setTimeout(() => { infoLongPressTriggered = true; toggleInfoControlVisibility(); }, LONG_PRESS_MS);
+    infoGhostEl.addEventListener("click", event => {
+      event.stopPropagation();
+      if (infoControlIsHidden) showInfo();
     });
-    infoControlEl.addEventListener("pointerup", () => clearTimeout(infoLongPress));
-    infoControlEl.addEventListener("pointerleave", () => clearTimeout(infoLongPress));
+
+    // ─── Operation: tap → dark mode. Long press → placeholder (disabled) ─────────
 
     operationEl.addEventListener("click", event => {
       event.stopPropagation();
-      if (!operationLongPressTriggered) toggleDarkMode();
-      operationLongPressTriggered = false;
+      // Long press on operation intentionally disabled — placeholder for future use
+      toggleDarkMode();
     });
 
     operationEl.addEventListener("pointerdown", () => {
-      operationLongPressTriggered = false;
-      operationLongPress = setTimeout(() => { operationLongPressTriggered = true; openLevelPicker(); }, LONG_PRESS_MS);
+      // PLACEHOLDER: long press on operation (currently disabled)
+      // operationLongPress = setTimeout(() => { /* future use */ }, LONG_PRESS_MS);
     });
-    operationEl.addEventListener("pointerup", () => clearTimeout(operationLongPress));
-    operationEl.addEventListener("pointerleave", () => clearTimeout(operationLongPress));
+    operationEl.addEventListener("pointerup",    () => { /* placeholder */ });
+    operationEl.addEventListener("pointerleave", () => { /* placeholder */ });
+
+    // ─── Overlay close ────────────────────────────────────────────────────────────
 
     overlayEl.addEventListener("click", event => { if (event.target === overlayEl) closePicker(); });
     infoOverlayEl.addEventListener("click", event => { if (event.target === infoOverlayEl) infoOverlayEl.classList.remove("open"); });
 
+    // ─── Service worker ───────────────────────────────────────────────────────────
+
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js"));
     }
+
+    // ─── Init ────────────────────────────────────────────────────────────────────
 
     applyStylePreferences();
     showNewOperation();
